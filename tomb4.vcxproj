@@ -90,7 +90,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;GENERAL_FIXES;CUTSEQ_SKIPPER;_CRT_SECURE_NO_WARNINGS;FOOTPRINTS;SMOOTH_SHADOWS;DISCORD_RPC;IMPROVED_BARS;ENEMY_BARS;TR2MAIN_WIDESCREEN;NO_CD;AMMO_COUNTER;_DEBUG;TOMB4_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NO_CD;_DEBUG;TOMB4_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>../tomb4/pch.h</PrecompiledHeaderFile>
@@ -270,12 +270,8 @@
     <ClInclude Include="TOMB4\specific\texture.h" />
     <ClInclude Include="TOMB4\specific\time.h" />
     <ClInclude Include="TOMB4\specific\winmain.h" />
-    <ClInclude Include="TOMB4\tomb4\libs\discordRPC\discord_register.h" />
-    <ClInclude Include="TOMB4\tomb4\libs\discordRPC\discord_rpc.h" />
     <ClInclude Include="TOMB4\tomb4\libs\zlib\zlib.h" />
     <ClInclude Include="TOMB4\tomb4\pch.h" />
-    <ClInclude Include="TOMB4\tomb4\tomb4.h" />
-    <ClInclude Include="TOMB4\tomb4\troyestuff.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TOMB4\game\ahmet.cpp" />
@@ -411,19 +407,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TOMB4\tomb4\tomb4.cpp" />
-    <ClCompile Include="TOMB4\tomb4\troyestuff.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="tomb4.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="TOMB4\tomb4\libs\discordRPC\discord-rpc.lib">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </Library>
-    <Library Include="TOMB4\tomb4\libs\discordRPC\discord-rpcd.lib">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </Library>
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon.ico" />

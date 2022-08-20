@@ -10,9 +10,6 @@
 #include "winmain.h"
 #include "../game/sound.h"
 #include "../game/gameflow.h"
-#ifdef DISCORD_RPC
-#include "../tomb4/tomb4.h"
-#endif
 #include "dxshell.h"
 #include "../game/savegame.h"
 
@@ -77,17 +74,9 @@ unsigned int __stdcall GameMain(void* ptr)
 		if (!App.SoundDisabled)
 			SOUND_Init();
 
-#ifdef DISCORD_RPC
-		RPC_Init();
-#endif
-
 		DoGameflow();
 		GameClose();
 		S_CDStop();
-
-#ifdef DISCORD_RPC
-		RPC_close();
-#endif
 
 		if (fpcw)
 			RestoreFPCW(FPCW);

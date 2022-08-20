@@ -12,6 +12,3 @@ bool REG_ReadBool(char* SubKeyName, bool& value, bool defaultValue);
 bool LoadSettings();
 void SaveSettings();
 bool SaveSetup(HWND hDlg);
-#ifdef GENERAL_FIXES
-bool REG_KeyWasCreated();
-#endif

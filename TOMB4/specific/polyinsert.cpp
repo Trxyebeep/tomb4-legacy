@@ -121,26 +121,6 @@ void HWR_DrawSortList(D3DTLBUMPVERTEX* info, short num_verts, short texture, sho
 
 		break;
 
-#ifdef GENERAL_FIXES
-
-	case 5:
-
-		if (App.dx.lpZBuffer)
-			App.dx.lpD3DDevice->SetRenderState(D3DRENDERSTATE_ZWRITEENABLE, 0);
-
-		App.dx.lpD3DDevice->SetRenderState(D3DRENDERSTATE_ALPHATESTENABLE, 1);
-		App.dx.lpD3DDevice->SetRenderState(D3DRENDERSTATE_SRCBLEND, D3DBLEND_ZERO);
-		App.dx.lpD3DDevice->SetRenderState(D3DRENDERSTATE_DESTBLEND, D3DBLEND_INVSRCCOLOR);
-		App.dx.lpD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-		App.dx.lpD3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE4X);
-		DXAttempt(App.dx.lpD3DDevice->SetTexture(0, Textures[texture].tex));
-		App.dx.lpD3DDevice->DrawPrimitive(D3DPT_TRIANGLELIST, FVF, info, num_verts, D3DDP_DONOTUPDATEEXTENTS | D3DDP_DONOTCLIP);
-		App.dx.lpD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-		App.dx.lpD3DDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-		break;
-
-#endif
-
 	case 6:
 
 		if (App.dx.lpZBuffer)
@@ -209,9 +189,7 @@ void DrawSortList()
 	}
 	else
 	{
-#ifdef GENERAL_FIXES				//just to shut VS up
-		pSort = SortList[0];		//if SortCount is < 0 then pSort will be uninitialized in the original, but I don't think that ever happens
-#endif
+		pSort = SortList[0];		//originally uninitialized
 
 		for (num = 0; num < SortCount; num++)
 		{
@@ -268,11 +246,7 @@ void DrawSortList()
 		{
 			pSort = SortList[num];
 
-#ifdef GENERAL_FIXES
-			if (pSort->drawtype == 2 || pSort->drawtype == 3 || pSort->drawtype == 5 || pSort->drawtype == 6 || pSort->drawtype == 7)
-#else
 			if (pSort->drawtype == 2 || pSort->drawtype == 3 || pSort->drawtype == 6 || pSort->drawtype == 7)
-#endif
 				break;
 		}
 
@@ -286,11 +260,7 @@ void DrawSortList()
 		{
 			pSort = SortList[num];
 
-#ifdef GENERAL_FIXES
-			if (pSort->drawtype == 2 || pSort->drawtype == 3 || pSort->drawtype == 5 || pSort->drawtype == 6 || pSort->drawtype == 7)
-#else
 			if (pSort->drawtype == 2 || pSort->drawtype == 3 || pSort->drawtype == 6 || pSort->drawtype == 7)
-#endif
 			{
 				if (pSort->tpage == tpage && pSort->drawtype == drawtype)
 				{
@@ -448,6 +418,8 @@ void ClearFXFogBulbs()
 	NumFXFogBulbs = 0;
 }
 
+#pragma warning(push)
+#pragma warning(disable : 4723)
 void TriggerFXFogBulb(long x, long y, long z, long FXRad, long density, long r, long g, long b, long room_number)
 {
 	FOGBULB_STRUCT* FogBulb;
@@ -471,11 +443,7 @@ void TriggerFXFogBulb(long x, long y, long z, long FXRad, long density, long r, 
 	FogBulb->WorldPos.z = (float)z;
 	FogBulb->rad = 0;
 	FogBulb->sqrad = 0;
-#ifdef GENERAL_FIXES
-	FogBulb->inv_sqrad = NAN;
-#else
 	FogBulb->inv_sqrad = 1 / FogBulb->sqrad;
-#endif
 	FogBulb->timer = 50;
 	FogBulb->active = 1;
 	FogBulb->FXRad = FXRad;
@@ -486,6 +454,7 @@ void TriggerFXFogBulb(long x, long y, long z, long FXRad, long density, long r, 
 	CreateFogPos(FogBulb);
 	NumFXFogBulbs++;
 }
+#pragma warning(pop)
 
 long IsVolumetric()
 {
@@ -720,10 +689,7 @@ void AddTriClippedSorted(D3DTLVERTEX* v, short v0, short v1, short v2, TEXTUREST
 	c = clipflags;
 	clipZ = 0;
 	clip = 1;
-
-#ifdef GENERAL_FIXES	//uninitialized
-	sl = 0;
-#endif
+	sl = 0;		//originally uninitialized
 
 	if (c[v0] & c[v1] & c[v2])
 		return;
@@ -805,22 +771,11 @@ void AddTriClippedSorted(D3DTLVERTEX* v, short v0, short v1, short v2, TEXTUREST
 	specBak[1] = v[v1].specular;
 	specBak[2] = v[v2].specular;
 
-	if (App.Volumetric)
+	if (App.Volumetric && tex->drawtype != 2)
 	{
-		if (tex->drawtype != 2)
-		{
-			OmniFog(&v[v0]);
-			OmniFog(&v[v1]);
-			OmniFog(&v[v2]);
-		}
-#ifdef GENERAL_FIXES
-		else
-		{
-			v[v0].specular |= 0xFF000000;
-			v[v1].specular |= 0xFF000000;
-			v[v2].specular |= 0xFF000000;
-		}
-#endif
+		OmniFog(&v[v0]);
+		OmniFog(&v[v1]);
+		OmniFog(&v[v2]);
 	}
 
 	pV = &v[v0];
@@ -1041,24 +996,12 @@ void AddQuadClippedSorted(D3DTLVERTEX* v, short v0, short v1, short v2, short v3
 	specBak[2] = v[v2].specular;
 	specBak[3] = v[v3].specular;
 
-	if (App.Volumetric)
+	if (App.Volumetric && tex->drawtype != 2)
 	{
-		if (tex->drawtype != 2)
-		{
-			OmniFog(&v[v0]);
-			OmniFog(&v[v1]);
-			OmniFog(&v[v2]);
-			OmniFog(&v[v3]);
-		}
-#ifdef GENERAL_FIXES
-		else
-		{
-			v[v0].specular |= 0xFF000000;
-			v[v1].specular |= 0xFF000000;
-			v[v2].specular |= 0xFF000000;
-			v[v3].specular |= 0xFF000000;
-		}
-#endif
+		OmniFog(&v[v0]);
+		OmniFog(&v[v1]);
+		OmniFog(&v[v2]);
+		OmniFog(&v[v3]);
 	}
 
 	pV = &v[v0];

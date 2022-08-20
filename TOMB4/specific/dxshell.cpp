@@ -547,7 +547,7 @@ void DXInitKeyboard(HWND hwnd, HINSTANCE hinstance)
 	IDirectInput* dinput;
 	IDirectInputDevice* Keyboard;
 
-#if (DIRECTINPUT_VERSION >= 0x800)
+#if 1
 	DXAttempt(DirectInput8Create(hinstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (LPVOID*)&dinput, 0));
 #else
 	DXAttempt(DirectInputCreate(hinstance, DIRECTINPUT_VERSION, &dinput, 0));	//original
@@ -910,7 +910,7 @@ long DXCreate(long w, long h, long bpp, long Flags, DXPTR* dxptr, HWND hWnd, lon
 
 	DXAttempt(G_dxptr->lpD3DDevice->SetRenderTarget(G_dxptr->lpBackBuffer, 0));
 
-#ifndef GENERAL_FIXES
+#if	0						//software renderer
 	if (!(G_dxptr->Flags & 0x80))
 		CreateFakeD3D();
 #endif

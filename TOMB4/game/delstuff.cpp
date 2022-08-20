@@ -10,9 +10,6 @@
 #include "lara_states.h"
 #include "../specific/input.h"
 #include "../specific/function_stubs.h"
-#ifdef GENERAL_FIXES
-#include "../tomb4/tomb4.h"
-#endif
 #include "lara.h"
 #include "gameflow.h"
 
@@ -120,38 +117,33 @@ void DrawLara(ITEM_INFO* item, long mirror)
 	if (lara.vehicle == NO_ITEM)
 		S_PrintShadow(obj->shadow_size, GLaraShadowframe, item);
 
-#ifdef GENERAL_FIXES
-	if (tomb4.look_transparency)
-#endif
+	if (input & IN_LOOK)
 	{
-		if (input & IN_LOOK)
-		{
-			dx = lara_item->pos.x_pos - CamPos.x;
-			dy = lara_item->pos.y_pos - CamPos.y - 512;
-			dz = lara_item->pos.z_pos - CamPos.z;
-			dist = phd_sqrt(SQUARE(dx) + SQUARE(dy) + SQUARE(dz));
-			a = dist >> 2;
+		dx = lara_item->pos.x_pos - CamPos.x;
+		dy = lara_item->pos.y_pos - CamPos.y - 512;
+		dz = lara_item->pos.z_pos - CamPos.z;
+		dist = phd_sqrt(SQUARE(dx) + SQUARE(dy) + SQUARE(dz));
+		a = dist >> 2;
 
-			if (a < 0)
-				a = 0;
+		if (a < 0)
+			a = 0;
+
+		if (a > 255)
+			a = 255;
+
+		GlobalAlpha = a << 24;
+	}
+	else
+	{
+		if (a < 255)
+		{
+			a += 8;
 
 			if (a > 255)
 				a = 255;
-
-			GlobalAlpha = a << 24;
 		}
-		else
-		{
-			if (a < 255)
-			{
-				a += 8;
 
-				if (a > 255)
-					a = 255;
-			}
-
-			GlobalAlpha = a << 24;
-		}
+		GlobalAlpha = a << 24;
 	}
 
 	if (!mirror)
@@ -240,11 +232,7 @@ void DrawLara(ITEM_INFO* item, long mirror)
 			else
 				xRot = phd_atan(cos, sin);
 
-#ifdef GENERAL_FIXES	//fixes wrong elbows when they are stretched
-			phd_RotX(short(-xRot >> 1));
-#else
 			phd_RotX(-(short)xRot >> 1);
-#endif
 			phd_PutPolygons(*meshpp, -1);
 			phd_PopMatrix();
 		}

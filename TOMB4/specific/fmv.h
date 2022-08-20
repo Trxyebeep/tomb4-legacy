@@ -1,7 +1,7 @@
 #pragma once
 #include "../global/types.h"
 
-#ifdef GENERAL_FIXES
+#if 1
 bool LoadBinkStuff();
 #endif
 void ShowBinkFrame();

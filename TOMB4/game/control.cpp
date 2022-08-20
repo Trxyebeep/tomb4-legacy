@@ -28,7 +28,6 @@
 #include "lot.h"
 #include "../specific/output.h"
 #include "gameflow.h"
-#include "../tomb4/tomb4.h"
 #include "lara1gun.h"
 #include "sphere.h"
 #include "draw.h"
@@ -39,9 +38,6 @@
 #include "lara.h"
 #include "deltapak.h"
 #include "health.h"
-#ifdef CUTSEQ_SKIPPER
-#include "../specific/dxshell.h"
-#endif
 #include "savegame.h"
 #include "../specific/file.h"
 
@@ -111,104 +107,6 @@ static short los_rooms[20];
 
 static short cdtrack = -1;
 
-#ifdef GENERAL_FIXES
-char DeathMenuActive;
-
-static long S_Death()
-{
-	long selection, menu, ret;
-
-	CreateMonoScreen();
-	selection = 0;
-	menu = 0;
-	ret = 0;
-	DeathMenuActive = 1;
-
-	while (!ret)
-	{
-		S_InitialisePolyList();
-		SetDebounce = 1;
-		S_UpdateInput();
-		UpdatePulseColour();
-		lara.death_count++;
-		S_DisplayMonoScreen();
-
-		if (MainThread.ended)
-			return 4;
-
-		if (Gameflow->LoadSaveEnabled)
-		{
-			if (!menu)	//"main" menu
-			{
-				PrintString((ushort)phd_centerx, (ushort)phd_centery, 3, SCRIPT_TEXT(TXT_GAME_OVER), FF_CENTER);
-				PrintString((ushort)phd_centerx, ushort(phd_centery + 2 * font_height), !selection ? 1 : 2, SCRIPT_TEXT(TXT_Load_Game), FF_CENTER);
-				PrintString((ushort)phd_centerx, ushort(phd_centery + 3 * font_height), selection == 1 ? 1 : 2, SCRIPT_TEXT(TXT_Exit_to_Title), FF_CENTER);
-
-				if (selection)
-				{
-					if (dbinput & IN_FORWARD)
-					{
-						selection = 0;
-						SoundEffect(SFX_MENU_SELECT, 0, SFX_ALWAYS);
-					}
-
-					if (dbinput & IN_SELECT)
-					{
-						lara.death_count = 0;
-						ret = 1;
-						SoundEffect(SFX_MENU_CHOOSE, 0, SFX_ALWAYS);
-					}
-				}
-				else
-				{
-					if (dbinput & IN_BACK)
-					{
-						selection = 1;
-						SoundEffect(SFX_MENU_SELECT, 0, SFX_ALWAYS);
-					}
-
-					if (dbinput & IN_SELECT)
-					{
-						menu = 1;
-						SoundEffect(SFX_MENU_CHOOSE, 0, SFX_ALWAYS);
-					}
-				}
-			}
-			else if (menu == 1)	//reload
-			{
-				lara.death_count = 0;
-				ret = go_and_load_game();
-
-				if (ret)
-				{
-					if (ret > 0)
-						ret = 2;
-					else
-					{
-						menu = 0;
-						ret = 0;
-					}
-				}
-			}
-		}
-		else
-		{
-			PrintString((ushort)phd_centerx, (ushort)phd_centery, 3, SCRIPT_TEXT(TXT_GAME_OVER), FF_CENTER);
-
-			if (lara.death_count > 300 || (lara.death_count > 150 && input != IN_NONE))
-				return 1;
-		}
-
-		S_OutputPolyList();
-		camera.number_frames = S_DumpScreen();
-	}
-
-	DeathMenuActive = 0;
-	FreeMonoScreen();
-	return ret;
-}
-#endif
-
 long ControlPhase(long nframes, long demo_mode)
 {
 	ITEM_INFO* item;
@@ -231,9 +129,6 @@ long ControlPhase(long nframes, long demo_mode)
 	{
 		GlobalCounter++;
 		UpdateSky();
-#ifdef DISCORD_RPC
-		RPC_Update();
-#endif
 
 	//	if (cdtrack > 0)
 			//empty func call here
@@ -251,11 +146,6 @@ long ControlPhase(long nframes, long demo_mode)
 
 		if (cutseq_trig)
 		{
-#ifdef CUTSEQ_SKIPPER
-			if (keymap[DIK_ESCAPE] && !ScreenFading && !bDoCredits && tomb4.cutseq_skipper)
-				cutseq_trig = 3;
-#endif
-
 			input = 0;
 
 			if (cutseq_num == 27)
@@ -272,36 +162,17 @@ long ControlPhase(long nframes, long demo_mode)
 
 		if (gfLevelComplete)
 			return 3;
-		
-#ifdef GENERAL_FIXES
-		if (tomb4.gameover)
+
+		if (reset_flag || lara.death_count > 300 || lara.death_count > 60 && input)
 		{
-			if (reset_flag)
+			if (Gameflow->DemoDisc && reset_flag)
 			{
 				reset_flag = 0;
-				return 1;
+				return 4;
 			}
 
-			if (lara.death_count > 300 || lara.death_count > 90 && input)
-			{
-				reset_flag = 0;
-				return S_Death();
-			}
-		}
-		else
-#endif
-		{
-			if (reset_flag || lara.death_count > 300 || lara.death_count > 60 && input)
-			{
-				if (Gameflow->DemoDisc && reset_flag)
-				{
-					reset_flag = 0;
-					return 4;
-				}
-
-				reset_flag = 0;
-				return 1;
-			}
+			reset_flag = 0;
+			return 1;
 		}
 
 		if (demo_mode && input == IN_ALL)
@@ -309,29 +180,16 @@ long ControlPhase(long nframes, long demo_mode)
 
 		if (!FadeScreenHeight)
 		{
-#ifdef GENERAL_FIXES
-			if (input & IN_SAVE && lara_item->hit_points > 0)
-				S_LoadSave(IN_SAVE, 0, 0);
-#else
 			if (input & IN_SAVE)
 				S_LoadSave(IN_SAVE, 0);
-#endif
 
 			else if (input & IN_LOAD)
 			{
-#ifdef GENERAL_FIXES
-				if (S_LoadSave(IN_LOAD, 0, 0) >= 0)
-#else
 				if (S_LoadSave(IN_LOAD, 0) >= 0)
-#endif
 					return 2;
 			}
 
-#ifdef GENERAL_FIXES
-			if (input & IN_PAUSE && gfGameMode == 0 && lara_item->hit_points > 0)
-#else
 			if (input & IN_PAUSE && gfGameMode == 0)
-#endif
 			{
 				if (S_PauseMenu() == 8)
 					return 1;
@@ -563,10 +421,6 @@ void FlipMap(long FlipNumber)
 
 		if (r->flipped_room >= 0 && r->FlipNumber == FlipNumber)
 		{
-#ifdef GENERAL_FIXES	//reset lighting room so objects take the new room's light...
-			for (int j = r->item_number; j != NO_ITEM; j = items[j].next_item)
-				items[j].il.room_number = 255;
-#endif
 			RemoveRoomFlipItems(r);
 			flipped = &room[r->flipped_room];
 			memcpy(&temp, r, sizeof(temp));
@@ -2609,11 +2463,6 @@ long GetTargetOnLOS(GAME_VECTOR* src, GAME_VECTOR* dest, long DrawTarget, long f
 		target.x = v.x - ((v.x - src->x) >> 5);
 		target.y = v.y - ((v.y - src->y) >> 5);
 		target.z = v.z - ((v.z - src->z) >> 5);
-
-#ifdef GENERAL_FIXES
-		if (item_no >= 0 && DrawTarget)
-			lara.target = &items[item_no];
-#endif
 
 		if (firing)
 		{

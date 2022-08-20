@@ -264,10 +264,3 @@ bool SaveSetup(HWND hDlg)
 	CloseRegistry();
 	return 1;
 }
-
-#ifdef GENERAL_FIXES	//I need this one
-bool REG_KeyWasCreated()
-{
-	return dwDisposition == REG_CREATED_NEW_KEY;
-}
-#endif

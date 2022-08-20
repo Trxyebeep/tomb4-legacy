@@ -15,12 +15,6 @@
 #include "../game/camera.h"
 #include "../game/effect2.h"
 #include "gamemain.h"
-
-#ifdef SMOOTH_SHADOWS
-#include "../tomb4/tomb4.h"
-
-#define CIRCUMFERENCE_POINTS 32 // Number of points in the circumference
-#endif
 #include "texture.h"
 #include "file.h"
 #include "../game/lara.h"
@@ -198,235 +192,6 @@ static long FadeStep;
 static long FadeCnt;
 static long FadeEnd;
 
-#ifdef SMOOTH_SHADOWS
-static void S_PrintCircleShadow(short size, short* box, ITEM_INFO* item)
-{
-	TEXTURESTRUCT Tex;
-	D3DTLVERTEX v[3];
-	PHD_VECTOR pos;
-	PHD_VECTOR cv[CIRCUMFERENCE_POINTS];
-	PHD_VECTOR cp[CIRCUMFERENCE_POINTS];
-	PHD_VECTOR ccv;
-	PHD_VECTOR ccp;
-	long fx, fy, fz, x, y, z, x1, y1, z1, x2, y2, z2, x3, y3, z3, xSize, zSize, xDist, zDist;
-	short room_number;
-
-	xSize = size * (box[1] - box[0]) / 192;	//x size of grid
-	zSize = size * (box[5] - box[4]) / 192;	//z size of grid
-	xDist = xSize / LINE_POINTS;			//distance between each point of the grid on X
-	zDist = zSize / LINE_POINTS;			//distance between each point of the grid on Z
-	x = xDist + (xDist >> 1);
-	z = zDist + (zDist >> 1);
-
-	for (int i = 0; i < CIRCUMFERENCE_POINTS; i++)
-	{
-		cp[i].x = x * phd_sin(65536 * i / CIRCUMFERENCE_POINTS) >> W2V_SHIFT;
-		cp[i].z = z * phd_cos(65536 * i / CIRCUMFERENCE_POINTS) >> W2V_SHIFT;
-		cv[i].x = cp[i].x;
-		cv[i].z = cp[i].z;
-	}
-
-	phd_PushUnitMatrix();
-
-	if (item == lara_item)	//position the grid
-	{
-		pos.x = 0;
-		pos.y = 0;
-		pos.z = 0;
-		GetLaraJointPos(&pos, LM_TORSO);
-		room_number = lara_item->room_number;
-		y = GetHeight(GetFloor(pos.x, pos.y, pos.z, &room_number), pos.x, pos.y, pos.z);
-
-		if (y == NO_HEIGHT)
-			y = item->floor;
-	}
-	else
-	{
-		pos.x = item->pos.x_pos;
-		y = item->floor;
-		pos.z = item->pos.z_pos;
-	}
-
-	y -= 16;
-	phd_TranslateRel(pos.x, y, pos.z);
-	phd_RotY(item->pos.y_rot);	//rot the grid to correct Y
-
-	for (int i = 0; i < CIRCUMFERENCE_POINTS; i++)
-	{
-		x = cp[i].x;
-		z = cp[i].z;
-		cp[i].x = (x * phd_mxptr[M00] + z * phd_mxptr[M02] + phd_mxptr[M03]) >> W2V_SHIFT;
-		cp[i].z = (x * phd_mxptr[M20] + z * phd_mxptr[M22] + phd_mxptr[M23]) >> W2V_SHIFT;
-	}
-
-	ccp.x = phd_mxptr[M03] >> W2V_SHIFT;
-	ccp.z = phd_mxptr[M23] >> W2V_SHIFT;
-	phd_PopMatrix();
-
-	for (int i = 0; i < CIRCUMFERENCE_POINTS; i++)
-	{
-		room_number = item->room_number;
-		cp[i].y = GetHeight(GetFloor(cp[i].x, item->floor, cp[i].z, &room_number), cp[i].x, item->floor, cp[i].z);
-
-		if (abs(cp[i].y - item->floor) > POINT_HEIGHT_CORRECTION)
-			cp[i].y = item->floor;
-	}
-
-	room_number = item->room_number;
-	ccp.y = GetHeight(GetFloor(ccp.x, item->floor, ccp.z, &room_number), ccp.x, item->floor, ccp.z);
-
-	if (abs(ccp.y - item->floor) > POINT_HEIGHT_CORRECTION)
-		ccp.y = item->floor;
-
-	phd_PushMatrix();
-	phd_TranslateAbs(pos.x, y, pos.z);
-	phd_RotY(item->pos.y_rot);
-
-	for (int i = 0; i < CIRCUMFERENCE_POINTS; i++)
-	{
-		fx = cv[i].x;
-		fy = (cp[i].y - item->floor);
-		fz = cv[i].z;
-		cv[i].x = (phd_mxptr[M00] * fx + phd_mxptr[M01] * fy + phd_mxptr[M02] * fz + phd_mxptr[M03]) >> W2V_SHIFT;
-		cv[i].y = (phd_mxptr[M10] * fx + phd_mxptr[M11] * fy + phd_mxptr[M12] * fz + phd_mxptr[M13]) >> W2V_SHIFT;
-		cv[i].z = (phd_mxptr[M20] * fx + phd_mxptr[M21] * fy + phd_mxptr[M22] * fz + phd_mxptr[M23]) >> W2V_SHIFT;
-	}
-
-	fy = (ccp.y - item->floor);
-	ccv.x = (phd_mxptr[M01] * fy + phd_mxptr[M03]) >> W2V_SHIFT;
-	ccv.y = (phd_mxptr[M11] * fy + phd_mxptr[M13]) >> W2V_SHIFT;
-	ccv.z = (phd_mxptr[M21] * fy + phd_mxptr[M23]) >> W2V_SHIFT;
-	phd_PopMatrix();
-
-	for (int i = 0; i < CIRCUMFERENCE_POINTS; i++) // Draw the pizza
-	{
-		x1 = (long)cv[i].x;
-		y1 = (long)cv[i].y;
-		z1 = (long)cv[i].z;
-		x2 = (long)cv[(i + 1) % CIRCUMFERENCE_POINTS].x;
-		y2 = (long)cv[(i + 1) % CIRCUMFERENCE_POINTS].y;
-		z2 = (long)cv[(i + 1) % CIRCUMFERENCE_POINTS].z;
-		x3 = (long)ccv.x;
-		y3 = (long)ccv.y;
-		z3 = (long)ccv.z;
-		setXYZ3(v, x1, y1, z1, x2, y2, z2, x3, y3, z3, clipflags);
-
-		if (tomb4.shadow_mode == 3)	//psx like?
-		{
-			v[0].color = 0x00000000;
-			v[1].color = 0x00000000;
-			v[2].color = 0xFF000000;
-		}
-		else
-		{
-			v[0].color = 0x4F000000;
-			v[1].color = 0x4F000000;
-			v[2].color = 0x4F000000;
-		}
-
-		if (item->after_death)
-		{
-			if (tomb4.shadow_mode == 3)
-				v[2].color = 0xFF000000 - (item->after_death << 24);
-			else
-			{
-				v[0].color = 0x80000000 - (item->after_death << 24);
-				v[1].color = v[0].color;
-				v[2].color = v[0].color;
-			}
-		}
-
-		v[0].specular = 0xFF000000;
-		v[1].specular = 0xFF000000;
-		v[2].specular = 0xFF000000;
-		Tex.flag = 0;
-		Tex.tpage = 0;
-		Tex.drawtype = 3;
-		Tex.u1 = 0;
-		Tex.v1 = 0;
-		Tex.u2 = 0;
-		Tex.v2 = 0;
-		Tex.u3 = 0;
-		Tex.v3 = 0;
-		Tex.u4 = 0;
-		Tex.v4 = 0;
-		AddTriSorted(v, 0, 1, 2, &Tex, 1);
-	}
-}
-
-static void S_PrintSpriteShadow(short size, short* box, ITEM_INFO* item)
-{
-	SPRITESTRUCT* sprite;
-	TEXTURESTRUCT Tex;
-	D3DTLVERTEX v[4];
-	PHD_VECTOR pos;
-	long xSize, zSize, x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, opt;
-
-	sprite = &spriteinfo[objects[DEFAULT_SPRITES].mesh_index + 11];
-	xSize = size * (box[1] - box[0]) / 160;
-	zSize = size * (box[5] - box[4]) / 160;
-	xSize >>= 1;
-	zSize >>= 1;
-
-	phd_PushMatrix();
-	phd_TranslateAbs(item->pos.x_pos, item->floor, item->pos.z_pos);
-	phd_RotY(item->pos.y_rot);
-
-	pos.x = -xSize;
-	pos.y = -16;
-	pos.z = zSize;
-	x1 = (phd_mxptr[M00] * pos.x + phd_mxptr[M01] * pos.y + phd_mxptr[M02] * pos.z + phd_mxptr[M03]) >> W2V_SHIFT;
-	y1 = (phd_mxptr[M10] * pos.x + phd_mxptr[M11] * pos.y + phd_mxptr[M12] * pos.z + phd_mxptr[M13]) >> W2V_SHIFT;
-	z1 = (phd_mxptr[M20] * pos.x + phd_mxptr[M21] * pos.y + phd_mxptr[M22] * pos.z + phd_mxptr[M23]) >> W2V_SHIFT;
-
-	pos.x = xSize;
-	pos.y = -16;
-	pos.z = zSize;
-	x2 = (phd_mxptr[M00] * pos.x + phd_mxptr[M01] * pos.y + phd_mxptr[M02] * pos.z + phd_mxptr[M03]) >> W2V_SHIFT;
-	y2 = (phd_mxptr[M10] * pos.x + phd_mxptr[M11] * pos.y + phd_mxptr[M12] * pos.z + phd_mxptr[M13]) >> W2V_SHIFT;
-	z2 = (phd_mxptr[M20] * pos.x + phd_mxptr[M21] * pos.y + phd_mxptr[M22] * pos.z + phd_mxptr[M23]) >> W2V_SHIFT;
-
-	pos.x = xSize;
-	pos.y = -16;
-	pos.z = -zSize;
-	x3 = (phd_mxptr[M00] * pos.x + phd_mxptr[M01] * pos.y + phd_mxptr[M02] * pos.z + phd_mxptr[M03]) >> W2V_SHIFT;
-	y3 = (phd_mxptr[M10] * pos.x + phd_mxptr[M11] * pos.y + phd_mxptr[M12] * pos.z + phd_mxptr[M13]) >> W2V_SHIFT;
-	z3 = (phd_mxptr[M20] * pos.x + phd_mxptr[M21] * pos.y + phd_mxptr[M22] * pos.z + phd_mxptr[M23]) >> W2V_SHIFT;
-
-	pos.x = -xSize;
-	pos.y = -16;
-	pos.z = -zSize;
-	x4 = (phd_mxptr[M00] * pos.x + phd_mxptr[M01] * pos.y + phd_mxptr[M02] * pos.z + phd_mxptr[M03]) >> W2V_SHIFT;
-	y4 = (phd_mxptr[M10] * pos.x + phd_mxptr[M11] * pos.y + phd_mxptr[M12] * pos.z + phd_mxptr[M13]) >> W2V_SHIFT;
-	z4 = (phd_mxptr[M20] * pos.x + phd_mxptr[M21] * pos.y + phd_mxptr[M22] * pos.z + phd_mxptr[M23]) >> W2V_SHIFT;
-	phd_PopMatrix();
-
-	setXYZ4(v, x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, clipflags);
-	
-	for (int i = 0; i < 4; i++)
-	{
-		v[i].color = 0xFF3C3C3C;
-		v[i].specular = 0xFF000000;
-	}
-
-	Tex.drawtype = 5;
-	Tex.flag = 0;
-	Tex.tpage = sprite->tpage;
-	Tex.u1 = sprite->x2;
-	Tex.v1 = sprite->y2;
-	Tex.u2 = sprite->x1;
-	Tex.v2 = sprite->y2;
-	Tex.u3 = sprite->x1;
-	Tex.v3 = sprite->y1;
-	Tex.u4 = sprite->x2;
-	Tex.v4 = sprite->y1;
-	opt = nPolyType;
-	nPolyType = 6;
-	AddQuadSorted(v, 0, 1, 2, 3, &Tex, 0);
-	nPolyType = opt;
-}
-#endif
-
 void S_PrintShadow(short size, short* box, ITEM_INFO* item)
 {
 	TEXTURESTRUCT Tex;
@@ -441,18 +206,6 @@ void S_PrintShadow(short size, short* box, ITEM_INFO* item)
 	long triA, triB, triC;
 	long x, y, z, x1, y1, z1, x2, y2, z2, x3, y3, z3, xSize, zSize, xDist, zDist;
 	short room_number;
-
-#ifdef SMOOTH_SHADOWS
-	if (tomb4.shadow_mode != 1)
-	{
-		if (tomb4.shadow_mode == 4)
-			S_PrintSpriteShadow(size, box, item);
-		else
-			S_PrintCircleShadow(size, box, item);
-
-		return;
-	}
-#endif
 
 	xSize = size * (box[1] - box[0]) / 192;	//x size of grid
 	zSize = size * (box[5] - box[4]) / 192;	//z size of grid
@@ -705,11 +458,6 @@ void S_DrawDrawSparks(SPARKS* sptr, long smallest_size, short* xyptr, long* zptr
 			v[2].specular = 0xFF000000;
 			v[3].specular = 0xFF000000;
 
-#ifdef GENERAL_FIXES
-			if (sptr->TransType == 3)
-				tex.drawtype = 5;
-			else
-#endif
 			if (sptr->TransType)
 				tex.drawtype = 2;
 			else
@@ -822,10 +570,6 @@ void DrawBikeSpeedo(long ux, long uy, long vel, long maxVel, long turboVel, long
 			v[1].color = 0xFFFFFFFF;
 		}
 
-#ifdef GENERAL_FIXES
-		v[0].specular = 0xFF000000;	//originally uninitialized..
-#endif
-
 		v[1].specular = v[0].specular;
 		AddLineSorted(v, &v[1], 6);
 	}
@@ -845,12 +589,6 @@ void DrawBikeSpeedo(long ux, long uy, long vel, long maxVel, long turboVel, long
 	v[1].sy = y + y1;
 	v[1].sz = f_mznear;
 	v[1].rhw = f_moneoznear;
-
-#ifdef GENERAL_FIXES
-	v[0].color = 0xFFA0C0FF;	//blueish color, PSX does A0C0E0, changed blue to FF to be as visible
-	v[0].specular = 0xFF000000;	//originally uninitialized
-#endif
-
 	v[1].color = v[0].color;
 	v[1].specular = v[0].specular;
 	AddLineSorted(v, &v[1], 6);
@@ -871,24 +609,6 @@ void Draw2DSprite(long x, long y, long slot, long unused, long unused2)
 	v[1].specular = 0xFF000000;
 	v[2].specular = 0xFF000000;
 	v[3].specular = 0xFF000000;
-
-#ifdef GENERAL_FIXES
-	if (slot == unused)	//'unused' is now the current gear, fight me
-	{
-		v[0].color = 0xFFFFFFFF;
-		v[1].color = 0xFFFFFFFF;
-		v[2].color = 0xFFFFFFFF;
-		v[3].color = 0xFFFFFFFF;
-	}
-	else
-	{
-		v[0].color = 0xFF404040;
-		v[1].color = 0xFF404040;
-		v[2].color = 0xFF404040;
-		v[3].color = 0xFF404040;
-	}
-#endif
-
 	tex.drawtype = 1;
 	tex.flag = 0;
 	tex.tpage = sprite->tpage;
@@ -908,15 +628,10 @@ void DrawJeepSpeedo(long ux, long uy, long vel, long maxVel, long turboVel, long
 	D3DTLVERTEX v[2];
 	float x, y, x0, y0, x1, y1;
 	long rSize, rVel, rMVel, rTVel, angle;
-#ifdef GENERAL_FIXES
-	long sX, sY;
-#endif
 
 	x = (float)phd_winxmax / 512.0F * 448.0F;
 	y = (float)phd_winymax / 240.0F * 224.0F;
-#ifndef GENERAL_FIXES
 	Draw2DSprite(long(x + 24), long(y - 16), spriteSlot + 17, RGBONLY(GetRandomDraw() & 0xFF, GetRandomDraw() & 0xFF, GetRandomDraw() & 0xFF), 0);
-#endif
 	rSize = (7 * size) >> 3;
 	rVel = abs(vel >> 1);
 
@@ -930,16 +645,9 @@ void DrawJeepSpeedo(long ux, long uy, long vel, long maxVel, long turboVel, long
 
 	rMVel = maxVel >> 1;
 	rTVel = turboVel >> 1;
-#ifdef GENERAL_FIXES
-	rTVel += rTVel >> 1;
-#endif
 	angle = -0x4000;
 
-#ifdef GENERAL_FIXES
-	for (int i = 0; i <= rTVel; i += 1536)
-#else
 	for (int i = 0; i <= rTVel; i += 2048)
-#endif
 	{
 		x0 = ((rSize * (phd_sin(angle + i)) >> (W2V_SHIFT - 1)) - ((rSize * phd_sin(angle + i)) >> (W2V_SHIFT + 1))) * ((float)phd_winxmax / 512.0F);
 		y0 = (-(rSize * phd_cos(angle + i)) >> W2V_SHIFT) * (float)phd_winymax / 240.0F;
@@ -967,10 +675,6 @@ void DrawJeepSpeedo(long ux, long uy, long vel, long maxVel, long turboVel, long
 			v[1].color = 0xFFFFFFFF;
 		}
 
-#ifdef GENERAL_FIXES
-		v[0].specular = 0xFF000000;	//originally uninitialized..
-#endif
-
 		v[1].specular = v[0].specular;
 		AddLineSorted(v, &v[1], 6);
 	}
@@ -990,17 +694,6 @@ void DrawJeepSpeedo(long ux, long uy, long vel, long maxVel, long turboVel, long
 	v[1].sy = y + y1;
 	v[1].sz = f_mznear;
 	v[1].rhw = f_moneoznear;
-
-#ifdef GENERAL_FIXES
-	v[0].color = 0xFFA0C0FF;	//blueish color, PSX does A0C0E0, changed blue to FF to be as visible
-	v[0].specular = 0xFF000000;	//originally uninitialized
-	sX = long(x + 16 * ((float)phd_winxmax / 512.0F));
-	sY = long(y - 20 * ((float)phd_winymax / 240.0F));
-	Draw2DSprite(sX, sY, 17, spriteSlot + 17, 0);
-	sY = long(y - 6 * ((float)phd_winymax / 240.0F));
-	Draw2DSprite(sX, sY, 18, spriteSlot + 17, 0);
-#endif
-
 	v[1].color = v[0].color;
 	v[1].specular = v[0].specular;
 	AddLineSorted(v, &v[1], 6);
@@ -1030,11 +723,6 @@ void DrawDebris()
 
 		phd_PushMatrix();
 		phd_TranslateAbs(dptr->x, dptr->y, dptr->z);
-
-#ifdef GENERAL_FIXES				//PSX & TR5 have this
-		phd_RotY(dptr->YRot << 8);
-		phd_RotX(dptr->XRot << 8);
-#endif
 
 		offsets[0] = dptr->XYZOffsets1[0];
 		offsets[1] = dptr->XYZOffsets1[1];
@@ -1468,7 +1156,7 @@ void OutputSky()
 	SortPolyList(SortCount, SortList);
 	RestoreFPCW(FPCW);
 
-#ifdef GENERAL_FIXES
+#if	1	//software
 	DrawSortList();
 #else
 	MMXSetPerspecLimit(0);

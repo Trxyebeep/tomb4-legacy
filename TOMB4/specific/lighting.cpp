@@ -44,9 +44,7 @@ void InitItemDynamicLighting(ITEM_INFO* item)
 	FVECTOR l;
 	long last_off;
 
-#ifdef GENERAL_FIXES
-	last_off = -1;	//uninitialized var
-#endif
+	last_off = -1;	//originally uninitialized
 
 	for (int i = 0; i < MAX_DYNAMICS; i++)
 	{
@@ -278,11 +276,6 @@ void SetupLight(D3DLIGHT_STRUCT* d3dlight, PCLIGHT* light, long* ambient)
 
 		if (val >= light->Inner)
 			val2 = (val - light->Outer) / ((light->Outer - light->Inner) / -val2);
-
-#ifdef GENERAL_FIXES
-		if (val2 < 0)
-			val2 = 0;
-#endif
 
 		r -= val2;
 		g -= val2;
@@ -530,10 +523,7 @@ void CreateLightList(ITEM_INFO* item)
 		dx = current_lights[i].ix - item->il.item_pos.x;
 		dy = current_lights[i].iy - item->il.item_pos.y;
 		dz = current_lights[i].iz - item->il.item_pos.z;
-
-#ifdef GENERAL_FIXES	//stupid uninitialized var
-		range = SQUARE(dx) + SQUARE(dy) + SQUARE(dz);
-#endif
+		range = SQUARE(dx) + SQUARE(dy) + SQUARE(dz);	//originally uninitialized
 
 		if (current_lights[i].Type == LIGHT_POINT || current_lights[i].Type == LIGHT_SHADOW)
 		{

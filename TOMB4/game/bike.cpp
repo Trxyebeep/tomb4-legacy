@@ -134,20 +134,13 @@ void DrawBikeBeam(ITEM_INFO* item)
 	short* frm[2];
 	short* rot;
 	long rate, bounds, r, g, b;
-#ifdef GENERAL_FIXES
-	short* rot2;
-	long frac;
-#endif
 
 	bike = (BIKEINFO*)item->data;
 
 	if (!bike->light_intensity)
 		return;
 
-#ifdef GENERAL_FIXES
-	frac = 
-#endif
-		GetFrames(item, frm, &rate);
+	GetFrames(item, frm, &rate);
 	phd_PushMatrix();
 	phd_TranslateAbs(item->pos.x_pos, item->pos.y_pos, item->pos.z_pos);
 	phd_RotYXZ(item->pos.y_rot, item->pos.x_rot, item->pos.z_rot);
@@ -161,87 +154,40 @@ void DrawBikeBeam(ITEM_INFO* item)
 		meshpp = &meshes[obj->mesh_index];
 		meshpp += 2;
 		bone = &bones[obj->bone_index];
+		phd_TranslateRel(frm[0][6], frm[0][7], frm[0][8]);
+		rot = frm[0] + 9;
+		gar_RotYXZsuperpack(&rot, 0);
 
-#ifdef GENERAL_FIXES
-		if (frac)
+		for (int i = 0; i < obj->nmeshes - 1; i++)
 		{
-			InitInterpolate(frac, rate);
-			phd_TranslateRel_ID(frm[0][6], frm[0][7], frm[0][8], frm[1][6], frm[1][7], frm[1][8]);
+			if (bone[0] & 1)
+				phd_mxptr -= 12;
 
-			rot = frm[0] + 9;
-			rot2 = frm[1] + 9;
-			gar_RotYXZsuperpack_I(&rot, &rot2, 0);
+			if (bone[0] & 2)
+				phd_PushMatrix();
 
-			for (int i = 0; i < obj->nmeshes - 1; i++)
-			{
-				if (bone[0] & 1)
-					phd_PopMatrix_I();
-
-				if (bone[0] & 2)
-					phd_PushMatrix_I();
-
-				phd_TranslateRel_I(bone[1], bone[2], bone[3]);
-				gar_RotYXZsuperpack_I(&rot, &rot2, 0);
-
-				if (i == 2)
-				{
-					r = bike->light_intensity;
-					g = bike->light_intensity;
-					b = bike->light_intensity;
-
-					if (bike->light_intensity >= 127)
-					{
-						r = bike->light_intensity + (GetRandomDraw() & 0xF) - 32;
-						g = r;
-						b = r;
-					}
-
-					GlobalAmbient = RGBA(r, g, b, 255);
-					phd_PutPolygons_I(meshpp[0], -1);
-				}
-
-				bone += 4;
-				meshpp += 2;
-			}
-		}
-		else
-#endif
-		{
-			phd_TranslateRel(frm[0][6], frm[0][7], frm[0][8]);
-			rot = frm[0] + 9;
+			phd_TranslateRel(bone[1], bone[2], bone[3]);
 			gar_RotYXZsuperpack(&rot, 0);
 
-			for (int i = 0; i < obj->nmeshes - 1; i++)
+			if (i == 2)
 			{
-				if (bone[0] & 1)
-					phd_mxptr -= 12;
+				r = bike->light_intensity;
+				g = bike->light_intensity;
+				b = bike->light_intensity;
 
-				if (bone[0] & 2)
-					phd_PushMatrix();
-
-				phd_TranslateRel(bone[1], bone[2], bone[3]);
-				gar_RotYXZsuperpack(&rot, 0);
-
-				if (i == 2)
+				if (bike->light_intensity >= 127)
 				{
-					r = bike->light_intensity;
-					g = bike->light_intensity;
-					b = bike->light_intensity;
-
-					if (bike->light_intensity >= 127)
-					{
-						r = bike->light_intensity + (GetRandomDraw() & 0xF) - 32;
-						g = r;
-						b = r;
-					}
-
-					GlobalAmbient = RGBA(r, g, b, 255);
-					phd_PutPolygons(meshpp[0], -1);
+					r = bike->light_intensity + (GetRandomDraw() & 0xF) - 32;
+					g = r;
+					b = r;
 				}
 
-				bone += 4;
-				meshpp += 2;
+				GlobalAmbient = RGBA(r, g, b, 255);
+				phd_PutPolygons(meshpp[0], -1);
 			}
+
+			bone += 4;
+			meshpp += 2;
 		}
 	}
 
@@ -1392,9 +1338,7 @@ void BikeControl(short item_number)
 
 	driving = -1;
 	killed = 0;
-#ifdef GENERAL_FIXES
-	pitch = 0;
-#endif
+	pitch = 0;					//originally uninitialized
 	item = &items[lara.vehicle];
 	bike = (BIKEINFO*)item->data;
 	hitWall = BikeDynamics(item);

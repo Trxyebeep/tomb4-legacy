@@ -21,12 +21,8 @@
 #include "../game/newinv.h"
 #include "../game/camera.h"
 #include "3dmath.h"
-#ifdef GENERAL_FIXES
-#include "../tomb4/tomb4.h"
-#include "../game/control.h"
-#include "../tomb4/troyestuff.h"
-#endif
 #include "../game/lara.h"
+#include "../game/control.h"
 
 static long MonoScreenX[4] = { 0, 256, 512, 640 };
 static long MonoScreenY[3] = { 0, 256, 480 };
@@ -43,557 +39,27 @@ static SAVEFILE_INFO SaveGames[15];
 static float loadbar_pos;
 static long loadbar_maxpos;
 
-#ifdef IMPROVED_BARS
-static GouraudBarColourSet healthBarColourSet =
-{
-	{ 64, 96, 128, 96, 64 },
-	{ 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0 },
-	{ 128, 192, 255, 192, 128 },
-	{ 0, 0, 0, 0, 0 }
-};
-
-static GouraudBarColourSet poisonBarColourSet =
-{
-	{ 64, 96, 128, 96, 64 },
-	{ 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0 },
-	{ 64, 96, 128, 96, 64 },
-	{ 0, 0, 0, 0, 0 },
-	{ 128, 192, 255, 192, 128 }
-};
-
-static GouraudBarColourSet airBarColourSet =
-{
-	{ 0, 0, 0, 0, 0 },
-	{ 113, 146, 113, 93, 74 },
-	{ 123, 154, 123, 107, 91 },
-	{ 0, 0, 0, 0, 0 },
-	{ 113, 146, 113, 93, 74 },
-	{ 0, 0, 0, 0, 0 }
-};
-
-static GouraudBarColourSet dashBarColourSet =
-{
-	{ 144, 192, 240, 192, 144 },
-	{ 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0 },
-	{ 144, 192, 240, 192, 144 },
-	{ 144, 192, 240, 192, 144 },
-	{ 0, 0, 0, 0, 0 }
-};
-
-static GouraudBarColourSet loadBarColourSet =
-{
-	{ 48, 96, 127, 80, 32 },
-	{ 0, 0, 0, 0, 0 },
-	{ 48, 96, 127, 80, 32 },
-	{ 0, 0, 0, 0, 0 },
-	{ 48, 96, 127, 80, 32 },
-	{ 48, 96, 127, 80, 32 }
-};
-
-static GouraudBarColourSet enemyBarColourSet =
-{
-	{ 128, 192, 255, 192, 128 },
-	{ 64, 96, 128, 96, 64 },
-	{ 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0 },
-	{ 123, 154, 123, 107, 91 },
-	{ 0, 0, 0, 0, 0 }
-};
-
-static void S_DrawGouraudBar(long x, long y, long width, long height, long value, GouraudBarColourSet* colour)
-{
-	D3DTLVERTEX v[4];
-	TEXTURESTRUCT tex;
-	float fx, fx2, fy, fy2, fvalue;
-	long r, g, b;
-
-	clipflags[0] = 0;
-	clipflags[1] = 0;
-	clipflags[2] = 0;
-	clipflags[3] = 0;
-	nPolyType = 6;
-	tex.drawtype = 0;
-	tex.tpage = 0;
-	fx = phd_winxmax * 0.0015625F;
-	fy = phd_winymax * 0.0020833334F;
-	fvalue = 0.0099999998F * value;
-	fx2 = width * fvalue;
-	fy2 = height * 0.1666666716F;
-	v[0].specular = 0xFF000000;
-	v[1].specular = 0xFF000000;
-	v[2].specular = 0xFF000000;
-	v[3].specular = 0xFF000000;
-	v[0].sx = x * fx;
-	v[1].sx = x * fx + fx2 * fx;
-	v[2].sx = x * fx;
-	v[3].sx = x * fx + fx2 * fx;
-	v[0].sy = y * fy - fy2 * fy;
-	v[1].sy = y * fy - fy2 * fy;
-	v[2].sy = y * fy;
-	v[3].sy = y * fy;
-	v[0].sz = f_mznear;
-	v[1].sz = f_mznear;
-	v[2].sz = f_mznear;
-	v[3].sz = f_mznear;
-	v[0].rhw = f_mpersp / f_mznear * f_moneopersp;
-	v[1].rhw = f_mpersp / f_mznear * f_moneopersp;
-	v[2].rhw = f_mpersp / f_mznear * f_moneopersp;
-	v[3].rhw = f_mpersp / f_mznear * f_moneopersp;
-
-	v[0].sy += fy2 * fy;
-	v[1].sy += fy2 * fy;
-	v[2].sy += fy2 * fy;
-	v[3].sy += fy2 * fy;
-
-	v[0].color = 0xFF000000;
-	v[1].color = 0xFF000000;
-
-	r = colour->abLeftRed[0];
-	g = colour->abLeftGreen[0];
-	b = colour->abLeftBlue[0];
-	r -= r >> 2;
-	g -= g >> 2;
-	b -= b >> 2;
-	v[2].color = RGBONLY(r, g, b);
-
-	r = (long)((1 - fvalue) * colour->abLeftRed[0] + fvalue * colour->abRightRed[0]);
-	g = (long)((1 - fvalue) * colour->abLeftGreen[0] + fvalue * colour->abRightGreen[0]);
-	b = (long)((1 - fvalue) * colour->abLeftBlue[0] + fvalue * colour->abRightBlue[0]);
-	r -= r >> 2;
-	g -= g >> 2;
-	b -= b >> 2;
-	v[3].color = RGBONLY(r, g, b);
-
-	AddQuadSorted(v, 0, 1, 3, 2, &tex, 1);
-
-	for (int i = 0; i < 4; i++)
-	{
-		v[0].sy += fy2 * fy;
-		v[1].sy += fy2 * fy;
-		v[2].sy += fy2 * fy;
-		v[3].sy += fy2 * fy;
-		v[0].color = RGBONLY(colour->abLeftRed[i], colour->abLeftGreen[i], colour->abLeftBlue[i]);
-		r = (long)((1 - fvalue) * colour->abLeftRed[i] + fvalue * colour->abRightRed[i]);
-		g = (long)((1 - fvalue) * colour->abLeftGreen[i] + fvalue * colour->abRightGreen[i]);
-		b = (long)((1 - fvalue) * colour->abLeftBlue[i] + fvalue * colour->abRightBlue[i]);
-		v[1].color = RGBONLY(r, g, b);
-		v[2].color = RGBONLY(colour->abLeftRed[i + 1], colour->abLeftGreen[i + 1], colour->abLeftBlue[i + 1]);
-		r = (long)((1 - fvalue) * colour->abLeftRed[i + 1] + fvalue * colour->abRightRed[i + 1]);
-		g = (long)((1 - fvalue) * colour->abLeftGreen[i + 1] + fvalue * colour->abRightGreen[i + 1]);
-		b = (long)((1 - fvalue) * colour->abLeftBlue[i + 1] + fvalue * colour->abRightBlue[i + 1]);
-		v[3].color = RGBONLY(r, g, b);
-		AddQuadSorted(v, 0, 1, 3, 2, &tex, 1);
-	}
-
-	v[0].sy += fy2 * fy;
-	v[1].sy += fy2 * fy;
-	v[2].sy += fy2 * fy;
-	v[3].sy += fy2 * fy;
-
-	r = colour->abLeftRed[4];
-	g = colour->abLeftGreen[4];
-	b = colour->abLeftBlue[4];
-	r -= r >> 2;
-	g -= g >> 2;
-	b -= b >> 2;
-	v[0].color = RGBONLY(r, g, b);
-
-	r = (long)((1 - fvalue) * colour->abLeftRed[4] + fvalue * colour->abRightRed[4]);
-	g = (long)((1 - fvalue) * colour->abLeftGreen[4] + fvalue * colour->abRightGreen[4]);
-	b = (long)((1 - fvalue) * colour->abLeftBlue[4] + fvalue * colour->abRightBlue[4]);
-	r -= r >> 2;
-	g -= g >> 2;
-	b -= b >> 2;
-	v[1].color = RGBONLY(r, g, b);
-
-	v[2].color = 0xFF000000;
-	v[3].color = 0xFF000000;
-	AddQuadSorted(v, 0, 1, 3, 2, &tex, 1);
-
-	v[0].sx = x * fx - 2;
-	v[1].sx = x * fx + width * fx + 2;
-	v[2].sx = x * fx - 2;
-	v[3].sx = x * fx + width * fx + 2;
-	v[0].sy = y * fy;
-	v[1].sy = y * fy;
-	v[2].sy = y * fy + height * fy;
-	v[3].sy = y * fy + height * fy;
-	v[0].sz = f_mznear + 1;
-	v[1].sz = f_mznear + 1;
-	v[2].sz = f_mznear + 1;
-	v[3].sz = f_mznear + 1;
-	v[0].rhw = f_mpersp / (f_mznear + 1) * f_moneopersp;
-	v[1].rhw = f_mpersp / (f_mznear + 1) * f_moneopersp;
-	v[2].rhw = f_mpersp / (f_mznear + 1) * f_moneopersp;
-	v[3].rhw = f_mpersp / (f_mznear + 1) * f_moneopersp;
-	v[0].color = 0;
-	v[1].color = 0;
-	v[2].color = 0;
-	v[3].color = 0;
-	AddQuadSorted(v, 0, 1, 3, 2, &tex, 1);	//black background
-
-	v[0].sx = x * fx - 3;
-	v[1].sx = x * fx + width * fx + 3;
-	v[2].sx = x * fx - 3;
-	v[3].sx = x * fx + width * fx + 3;
-	v[0].sy = y * fy - 1;
-	v[1].sy = y * fy - 1;
-	v[2].sy = y * fy + height * fy + 1;
-	v[3].sy = y * fy + height * fy + 1;
-	v[0].sz = f_mznear + 2;
-	v[1].sz = f_mznear + 2;
-	v[2].sz = f_mznear + 2;
-	v[3].sz = f_mznear + 2;
-	v[0].rhw = f_mpersp / (f_mznear + 2) * f_moneopersp;
-	v[1].rhw = f_mpersp / (f_mznear + 2) * f_moneopersp;
-	v[2].rhw = f_mpersp / (f_mznear + 2) * f_moneopersp;
-	v[3].rhw = f_mpersp / (f_mznear + 2) * f_moneopersp;
-	v[0].color = 0xFFFFFFFF;
-	v[1].color = 0xFFFFFFFF;
-	v[2].color = 0xFFFFFFFF;
-	v[3].color = 0xFFFFFFFF;
-	AddQuadSorted(v, 0, 1, 3, 2, &tex, 1);	//white border
-}
-
-static void S_DoTR5Bar(long x, long y, long width, long height, long pos, long clr1, long clr2)
-{
-	D3DTLVERTEX v[4];
-	TEXTURESTRUCT tex;
-	float fx, fx2, fy, fw, fh, r1, g1, b1, r2, g2, b2, r, g, b, mul;
-	long lr, lg, lb, clr_11, clr_12, clr_21, clr_22;
-
-	clipflags[0] = 0;
-	clipflags[1] = 0;
-	clipflags[2] = 0;
-	clipflags[3] = 0;
-	nPolyType = 6;
-	tex.drawtype = 0;
-	tex.tpage = 0;
-	fx = (float)phd_winxmax * 0.0015625F;
-	fy = (float)phd_winymax * 0.0020833334F;
-	fw = (float)width;
-	fh = (float)(height >> 1);
-	fx2 = (fw * fx) * 0.0099999998F * (float)pos;
-	v[0].specular = 0xFF000000;
-	v[1].specular = 0xFF000000;
-	v[2].specular = 0xFF000000;
-	v[3].specular = 0xFF000000;
-	v[0].sx = (float)x * fx;
-	v[1].sx = ((float)x * fx) + fx2;
-	v[2].sx = (float)x * fx;
-	v[3].sx = ((float)x * fx) + fx2;
-	v[0].sy = (float)y * fy;
-	v[1].sy = (float)y * fy;
-	v[2].sy = ((float)y * fy) + (fh * fy);
-	v[3].sy = ((float)y * fy) + (fh * fy);
-	v[0].sz = f_mznear;
-	v[1].sz = f_mznear;
-	v[2].sz = f_mznear;
-	v[3].sz = f_mznear;
-	v[0].rhw = f_mpersp / f_mznear * f_moneopersp;
-	v[1].rhw = f_mpersp / f_mznear * f_moneopersp;
-	v[2].rhw = f_mpersp / f_mznear * f_moneopersp;
-	v[3].rhw = f_mpersp / f_mznear * f_moneopersp;
-
-	r1 = (float)CLRR(clr1);		//get rgbs
-	g1 = (float)CLRG(clr1);
-	b1 = (float)CLRB(clr1);
-	r2 = (float)CLRR(clr2);
-	g2 = (float)CLRG(clr2);
-	b2 = (float)CLRB(clr2);
-
-	mul = fx2 / (fw * fx);		//mix
-	r = r1 + ((r2 - r1) * mul);
-	g = g1 + ((g2 - g1) * mul);
-	b = b1 + ((b2 - b1) * mul);
-
-	lr = (long)r1;
-	lg = (long)g1;
-	lb = (long)b1;
-	clr_11 = RGBONLY(lr >> 1, lg >> 1, lb >> 1);	//clr1 is taken as is
-	clr_12 = RGBONLY(lr, lg, lb);
-
-	lr = (long)r;
-	lg = (long)g;
-	lb = (long)b;
-	clr_21 = RGBONLY(lr >> 1, lg >> 1, lb >> 1);	//clr2 is the mix
-	clr_22 = RGBONLY(lr, lg, lb);
-
-	v[0].color = clr_11;
-	v[1].color = clr_21;
-	v[2].color = clr_12;
-	v[3].color = clr_22;
-	AddQuadSorted(v, 0, 1, 3, 2, &tex, 1);	//top half
-
-	v[0].color = clr_12;
-	v[1].color = clr_22;
-	v[2].color = clr_11;
-	v[3].color = clr_21;
-	v[0].sy = ((float)y * fy) + (fh * fy);
-	v[1].sy = ((float)y * fy) + (fh * fy);
-	v[2].sy = (fh * fy) + (fh * fy) + ((float)y * fy);
-	v[3].sy = (fh * fy) + (fh * fy) + ((float)y * fy);
-	AddQuadSorted(v, 0, 1, 3, 2, &tex, 1);		//bottom half
-
-	v[0].sx = (float)x * fx;
-	v[1].sx = (fw * fx) + ((float)x * fx);
-	v[2].sx = (float)x * fx;
-	v[3].sx = (fw * fx) + ((float)x * fx);
-	v[0].sy = (float)y * fy;
-	v[1].sy = (float)y * fy;
-	v[2].sy = (fh * fy) + (fh * fy) + ((float)y * fy);
-	v[3].sy = (fh * fy) + (fh * fy) + ((float)y * fy);
-	v[0].sz = f_mznear + 1;
-	v[1].sz = f_mznear + 1;
-	v[2].sz = f_mznear + 1;
-	v[3].sz = f_mznear + 1;
-	v[0].rhw = f_mpersp / (f_mznear + 1) * f_moneopersp;
-	v[1].rhw = f_mpersp / (f_mznear + 1) * f_moneopersp;
-	v[2].rhw = f_mpersp / (f_mznear + 1) * f_moneopersp;
-	v[3].rhw = f_mpersp / (f_mznear + 1) * f_moneopersp;
-	v[0].color = 0;
-	v[1].color = 0;
-	v[2].color = 0;
-	v[3].color = 0;
-	AddQuadSorted(v, 0, 1, 3, 2, &tex, 1);	//black background
-
-	v[0].sx = ((float)x * fx) - 1;
-	v[1].sx = (fw * fx) + ((float)x * fx) + 1;
-	v[2].sx = ((float)x * fx) - 1;
-	v[3].sx = (fw * fx) + ((float)x * fx) + 1;
-	v[0].sy = ((float)y * fy) - 1;
-	v[1].sy = ((float)y * fy) - 1;
-	v[2].sy = (fh * fy) + (fh * fy) + ((float)y * fy) + 1;
-	v[3].sy = (fh * fy) + (fh * fy) + ((float)y * fy) + 1;
-	v[0].sz = f_mznear + 2;
-	v[1].sz = f_mznear + 2;
-	v[2].sz = f_mznear + 2;
-	v[3].sz = f_mznear + 2;
-	v[0].rhw = f_mpersp / (f_mznear + 2) * f_moneopersp;
-	v[1].rhw = f_mpersp / (f_mznear + 2) * f_moneopersp;
-	v[2].rhw = f_mpersp / (f_mznear + 2) * f_moneopersp;
-	v[3].rhw = f_mpersp / (f_mznear + 2) * f_moneopersp;
-	v[0].color = 0xFFFFFFFF;
-	v[1].color = 0xFFFFFFFF;
-	v[2].color = 0xFFFFFFFF;
-	v[3].color = 0xFFFFFFFF;
-	AddQuadSorted(v, 0, 1, 3, 2, &tex, 1);	//white border
-}
-
-static void S_DrawEnemyBar2(long pos)
-{
-	if (tomb4.bar_mode == 3)
-		S_DrawGouraudBar(245, font_height + 32, 150, 12, pos, &enemyBarColourSet);
-	else if (tomb4.bar_mode == 2)
-		S_DoTR5Bar(245, font_height + 32, 150, 12, pos, 0xA00000, 0xA0A000);
-	else
-		DoBar(245, (font_height << 1) + 48, 150, 12, pos, 0xFF000000, 0xFFFFA000);
-}
-
-void S_DrawEnemyBar(long pos)
-{
-	long x, y;
-
-	if (BinocularRange)
-	{
-		S_DrawEnemyBar2(pos);
-		return;
-	}
-
-	if (tomb4.bars_pos == 1)//original
-	{
-		x = font_height >> 2;
-
-		if (tomb4.bar_mode == 2 || tomb4.bar_mode == 3)
-			y = (font_height >> 2) + (font_height / 3);
-		else
-			y = (font_height >> 2) + (font_height >> 1);
-	}
-	else if (tomb4.bars_pos == 2)//improved
-	{
-		x = font_height >> 2;
-
-		if (tomb4.bar_mode == 2 || tomb4.bar_mode == 3)
-			y = (font_height >> 2) + (font_height / 3);
-		else
-			y = (font_height >> 2) + (font_height >> 1);
-	}
-	else//PSX
-	{
-		x = 470 - (font_height >> 2);
-
-		if (tomb4.bar_mode == 2 || tomb4.bar_mode == 3)
-			y = (font_height >> 1) + (font_height >> 2) + (5 * font_height / 9);
-		else
-			y = (font_height >> 2) + (font_height >> 1) + font_height;
-	}
-
-	if (tomb4.bar_mode == 3)
-		S_DrawGouraudBar(x, y, 150, 12, pos, &enemyBarColourSet);
-	else if (tomb4.bar_mode == 2)
-		S_DoTR5Bar(x, y, 150, 12, pos, 0xA00000, 0xA0A000);
-	else
-		DoBar(x, y, 150, 12, pos, 0xFF000000, 0xFFFFA000);
-}
-
-static void S_DrawHealthBar2(long pos)
-{
-	if (!gfCurrentLevel)
-		return;
-
-	if (tomb4.bar_mode == 3)
-		S_DrawGouraudBar(245, (font_height >> 1) + 32, 150, 12, pos, lara.poisoned ? &poisonBarColourSet : &healthBarColourSet);
-	else if (tomb4.bar_mode == 2)
-		S_DoTR5Bar(245, (font_height >> 1) + 32, 150, 12, pos, 0xA00000, lara.poisoned ? 0xA0A000 : 0xA000);
-	else
-		DoBar(245, font_height + 48, 150, 12, pos, 0xFF000000, lara.poisoned ? 0xFFFFFF00 : 0xFFFF0000);
-}
-#endif
-
 void S_DrawHealthBar(long pos)
 {
-	if (!gfCurrentLevel)
-		return;
-
-#ifdef GENERAL_FIXES
-	long x, y;
-
-	if (BinocularRange)
-	{
-		S_DrawHealthBar2(pos);
-		return;
-	}
-
-	if (tomb4.bars_pos == 1 || tomb4.bars_pos == 2)//original or improved
-	{
-		x = font_height >> 2;
-		y = font_height >> 2;
-	}
-	else//PSX
-	{
-		x = 470 - (font_height >> 2);
-		y = font_height >> 2;
-	}
-
-#ifdef IMPROVED_BARS
-	if (tomb4.bar_mode == 2)
+	if (gfCurrentLevel)
 	{
 		if (lara.poisoned)
-			S_DoTR5Bar(x, y, 150, 12, pos, 0xA00000, 0xA0A000);
+			DoBar(font_height >> 2, font_height >> 2, 150, 12, pos, 0xFF000000, 0xFFFFFF00);	//yellow
 		else
-			S_DoTR5Bar(x, y, 150, 12, pos, 0xA00000, 0x00A000);
+			DoBar(font_height >> 2, font_height >> 2, 150, 12, pos, 0xFF000000, 0xFFFF0000);	//red
 	}
-	else if (tomb4.bar_mode == 3)
-		S_DrawGouraudBar(x, y, 150, 12, pos, lara.poisoned ? &poisonBarColourSet : &healthBarColourSet);
-	else
-#endif
-	{
-		if (lara.poisoned)
-			DoBar(x, y, 150, 12, pos, 0xFF000000, 0xFFFFFF00);	//yellow
-		else
-			DoBar(x, y, 150, 12, pos, 0xFF000000, 0xFFFF0000);	//red
-	}
-#else
-
-	if (lara.poisoned)
-		DoBar(font_height >> 2, font_height >> 2, 150, 12, pos, 0xFF000000, 0xFFFFFF00);	//yellow
-	else
-		DoBar(font_height >> 2, font_height >> 2, 150, 12, pos, 0xFF000000, 0xFFFF0000);	//red
-#endif
 }
 
 void S_DrawAirBar(long pos)
 {
-	if (!gfCurrentLevel)
-		return;
-
-#ifdef GENERAL_FIXES
-	long x, y;
-
-	if (tomb4.bars_pos == 1)//original
-	{
-		x = 490 - (font_height >> 2);
-
-		if (tomb4.bar_mode == 2 || tomb4.bar_mode == 3)
-			y = (font_height >> 2) + (font_height / 3);
-		else
-			y = (font_height >> 2) + (font_height >> 1);
-	}
-	else if (tomb4.bars_pos == 2)//improved
-	{
-		x = 490 - (font_height >> 2);
-		y = font_height >> 2;
-	}
-	else//PSX
-	{
-		x = 470 - (font_height >> 2);
-
-		if (tomb4.bar_mode == 1)
-			y = (font_height >> 1) + (font_height >> 2);
-		else
-			y = (font_height >> 2) + (font_height / 3);
-	}
-
-#ifdef IMPROVED_BARS
-	if (tomb4.bar_mode == 2)
-		S_DoTR5Bar(x, y, 150, 12, pos, 0x0000A0, 0x0050A0);
-	else if (tomb4.bar_mode == 3)
-		S_DrawGouraudBar(x, y, 150, 12, pos, &airBarColourSet);
-	else
-#endif
-		DoBar(x, y, 150, 12, pos, 0xFF000000, 0xFF0000FF);	//blue
-#else
-	DoBar(490 - (font_height >> 2), (font_height >> 2) + (font_height >> 1), 150, 12, pos, 0xFF000000, 0xFF0000FF);	//blue
-#endif
+	if (gfCurrentLevel)
+		DoBar(490 - (font_height >> 2), (font_height >> 2) + (font_height >> 1), 150, 12, pos, 0xFF000000, 0xFF0000FF);	//blue
 }
 
 void S_DrawDashBar(long pos)
 {
-	if (!gfCurrentLevel)
-		return;
-
-#ifdef GENERAL_FIXES
-	long x, y;
-
-	if (tomb4.bars_pos == 1)//original
-	{
-		x = 490 - (font_height >> 2);
-		y = font_height >> 2;
-	}
-	else if (tomb4.bars_pos == 2)//improved
-	{
-		x = 490 - (font_height >> 2);
-
-		if (tomb4.bar_mode == 2 || tomb4.bar_mode == 3)
-			y = (font_height >> 2) + (font_height / 3);
-		else
-			y = (font_height >> 2) + (font_height >> 1);
-	}
-	else//PSX
-	{
-		x = 470 - (font_height >> 2);
-
-		if (tomb4.bar_mode == 1)
-			y = (font_height >> 2) + font_height;
-		else
-			y = (font_height >> 2) + (font_height / 3) + (font_height / 3);
-	}
-
-#ifdef IMPROVED_BARS
-	if (tomb4.bar_mode == 2)
-		S_DoTR5Bar(x, y, 150, 12, pos, 0xA0A000, 0x00A000);
-	else if (tomb4.bar_mode == 3)
-		S_DrawGouraudBar(x, y, 150, 12, pos, &dashBarColourSet);
-	else
-#endif
-		DoBar(x, y, 150, 12, pos, 0xFF000000, 0xFF00FF00);	//green
-#else
-	DoBar(490 - (font_height >> 2), font_height >> 2, 150, 12, pos, 0xFF000000, 0xFF00FF00);
-#endif
+	if (gfCurrentLevel)
+		DoBar(490 - (font_height >> 2), font_height >> 2, 150, 12, pos, 0xFF000000, 0xFF00FF00);
 }
 
 void S_InitLoadBar(long maxpos)
@@ -613,30 +79,7 @@ void S_LoadBar()
 		App.dx.lpD3DDevice->SetRenderState(D3DRENDERSTATE_DESTBLEND, D3DBLEND_INVSRCALPHA);
 		App.dx.lpD3DDevice->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, 0);
 		loadbar_pos += 100 / loadbar_maxpos;
-
-#ifdef IMPROVED_BARS
-		if (tomb4.tr5_loadbar)
-		{
-			if (tomb4.bar_mode == 3)
-				S_DrawGouraudBar(170, 480 - (font_height >> 1), 300, 10, (long)loadbar_pos, &loadBarColourSet);
-			else if (tomb4.bar_mode == 2)
-				S_DoTR5Bar(170, 480 - (font_height >> 1), 300, 10, (long)loadbar_pos, 0xA0, 0xF0);
-			else
-				DoBar(170, phd_winymax - font_height, 300, 10, (long)loadbar_pos, 0xFF000000, 0xFF9F1F80);
-		}
-		else
-		{
-			if (tomb4.bar_mode == 3)
-				S_DrawGouraudBar(20, 480 - (font_height >> 1), 600, 15, (long)loadbar_pos, &loadBarColourSet);
-			else if (tomb4.bar_mode == 2)
-				S_DoTR5Bar(20, 480 - (font_height >> 1), 600, 15, (long)loadbar_pos, 0xFF7F007F, 0xFF007F7F);
-			else
-				DoBar(20, phd_winymax - font_height, 600, 15, (long)loadbar_pos, 0xFF000000, 0xFF9F1F80);
-		}
-#else
 		DoBar(20, phd_winymax - font_height, 600, 15, (long)loadbar_pos, 0xFF000000, 0xFF9F1F80);
-#endif
-
 		SortPolyList(SortCount, SortList);
 		RestoreFPCW(FPCW);
 		DrawSortList();
@@ -652,11 +95,7 @@ void DoBar(long x, long y, long width, long height, long pos, long clr1, long cl
 	static float wat = 0;
 	long x2, sx, sy;
 
-#ifdef GENERAL_FIXES
-	nPolyType = 6;
-#else
 	nPolyType = 4;
-#endif
 	wat += 0.0099999998F;
 
 	if (wat > 0.99000001F)
@@ -818,14 +257,6 @@ void DoOptions()
 
 	if (menu)	//controls menu
 	{
-#ifdef GENERAL_FIXES	//excuse me let me just 
-		if (menu == 200)
-		{
-			TroyeMenu(textY, menu, selection);
-			return;
-		}
-#endif
-
 		if (Gameflow->Language == GERMAN)
 			keyboard_buttons = (char**)GermanKeyboard;
 		else
@@ -1117,11 +548,7 @@ void DoOptions()
 	}
 	else	//'main' menu
 	{
-#ifdef GENERAL_FIXES	//1 more option
-		num = 6;
-#else
 		num = 5;
-#endif
 		textY = 3 * font_height;
 		PrintString(phd_centerx, textY, 6, SCRIPT_TEXT(TXT_Options), FF_CENTER);
 		PrintString(phd_centerx, textY + font_height + (font_height >> 1), selection & 1 ? 1 : 2, SCRIPT_TEXT(TXT_Control_Configuration), FF_CENTER);
@@ -1155,10 +582,6 @@ void DoOptions()
 			strcpy(quality_text, SCRIPT_TEXT(TXT_Manual));
 
 		PrintString(phd_centerx + (phd_centerx >> 2), textY + 6 * font_height, selection & 0x10 ? 1 : 6, quality_text, 0);
-
-#ifdef GENERAL_FIXES	//yay!
-		PrintString(phd_centerx, (font_height >> 1) + textY + 7 * font_height, selection & 0x20 ? 1 : 2, "tomb4 options", FF_CENTER);
-#endif
 		if (dbinput & IN_FORWARD)
 		{
 			SoundEffect(SFX_MENU_CHOOSE, 0, SFX_ALWAYS);
@@ -1176,15 +599,6 @@ void DoOptions()
 			SoundEffect(SFX_MENU_SELECT, 0, SFX_ALWAYS);
 			menu = 1;
 		}
-
-#ifdef GENERAL_FIXES
-		if (dbinput & IN_SELECT && selection & 0x20)
-		{
-			SoundEffect(SFX_MENU_SELECT, 0, SFX_ALWAYS);
-			selection = 1;
-			menu = 200;
-		}
-#endif
 
 		if (!selection)
 			selection = 1;
@@ -1484,11 +898,7 @@ long DoLoadSave(long LoadSave)
 }
 #pragma warning(pop)
 
-#ifdef GENERAL_FIXES
-long S_LoadSave(long load_or_save, long mono, long inv_active)
-#else
 long S_LoadSave(long load_or_save, long mono)
-#endif
 {
 	long fade, ret;
 
@@ -1498,11 +908,7 @@ long S_LoadSave(long load_or_save, long mono)
 		CreateMonoScreen();
 
 	GetSaveLoadFiles();
-
-#ifdef GENERAL_FIXES
-	if (!inv_active)
-#endif
-		InventoryActive = 1;
+	InventoryActive = 1;
 
 	while (1)
 	{
@@ -1532,12 +938,6 @@ long S_LoadSave(long load_or_save, long mono)
 
 			fade = ret + 1;
 			S_LoadGame(ret);
-
-#ifdef GENERAL_FIXES
-			if (!DeathMenuActive)
-				SetFade(0, 255);
-#endif
-
 			ret = -1;
 		}
 
@@ -1562,11 +962,7 @@ long S_LoadSave(long load_or_save, long mono)
 	if (!mono)
 		FreeMonoScreen();
 
-#ifdef GENERAL_FIXES
-	if (!inv_active)
-#endif
-		InventoryActive = 0;
-
+	InventoryActive = 0;
 	return ret;
 }
 
@@ -1641,12 +1037,6 @@ void S_DisplayMonoScreen()
 	long y[4];
 	ulong col;
 
-#ifdef GENERAL_FIXES
-	x[0] = phd_winxmin;
-	y[0] = phd_winymin;
-	x[1] = phd_winxmin + phd_winwidth;
-	y[1] = phd_winymin + phd_winheight;
-#else
 	for (int i = 0; i < 3; i++)
 	{
 		x[i] = phd_winxmin + phd_winwidth * MonoScreenX[i] / 640;
@@ -1654,39 +1044,23 @@ void S_DisplayMonoScreen()
 	}
 
 	x[3] = phd_winxmin + phd_winwidth * MonoScreenX[3] / 640;
-#endif
 	RestoreFPCW(FPCW);
-
-#ifdef GENERAL_FIXES
-	if (tomb4.inv_bg_mode == 1 || tomb4.inv_bg_mode == 3)
-		col = 0xFFFFFFFF;
-	else
-		col = 0xFFFFFF80;
-#else
 	col = 0xFFFFFFFF;
-#endif
-
 	S_DrawTile(x[0], y[0], x[1] - x[0], y[1] - y[0], MonoScreen[0].tex, 0, 0, 256, 256, col, col, col, col);
-#ifndef GENERAL_FIXES
 	S_DrawTile(x[1], y[0], x[2] - x[1], y[1] - y[0], MonoScreen[1].tex, 0, 0, 256, 256, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 	S_DrawTile(x[2], y[0], x[3] - x[2], y[1] - y[0], MonoScreen[2].tex, 0, 0, 128, 256, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 	S_DrawTile(x[0], y[1], x[1] - x[0], y[2] - y[1], MonoScreen[3].tex, 0, 0, 256, 224, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 	S_DrawTile(x[1], y[1], x[2] - x[1], y[2] - y[1], MonoScreen[4].tex, 0, 0, 256, 224, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 	S_DrawTile(x[2], y[1], x[3] - x[2], y[2] - y[1], MonoScreen[2].tex, 128, 0, 128, 224, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
-#endif
 }
 
 void CreateMonoScreen()
 {
 	MonoScreenOn = 1;
-#ifdef GENERAL_FIXES
-	ConvertSurfaceToTextures(App.dx.lpBackBuffer);
-#else
 	ConvertSurfaceToTextures(App.dx.lpPrimaryBuffer);
-#endif
 }
 
-void FreeMonoScreen()	//"I DONT KNOW WHAT A FOR LOOP IS!!!!!!!!!" - said whoever stupid fuck that wrote this
+void FreeMonoScreen()
 {
 	if (MonoScreen[0].surface)
 	{
@@ -1696,7 +1070,6 @@ void FreeMonoScreen()	//"I DONT KNOW WHAT A FOR LOOP IS!!!!!!!!!" - said whoever
 	else
 		Log(1, "%s Attempt To Release NULL Ptr", "Mono Screen Surface");
 
-#ifndef GENERAL_FIXES
 	if (MonoScreen[1].surface)
 	{
 		Log(4, "Released %s @ %x - RefCnt = %d", "Mono Screen Surface", MonoScreen[1].surface, MonoScreen[1].surface->Release());
@@ -1728,7 +1101,6 @@ void FreeMonoScreen()	//"I DONT KNOW WHAT A FOR LOOP IS!!!!!!!!!" - said whoever
 	}
 	else
 		Log(1, "%s Attempt To Release NULL Ptr", "Mono Screen Surface");
-#endif
 
 	if (MonoScreen[0].tex)
 	{
@@ -1738,7 +1110,6 @@ void FreeMonoScreen()	//"I DONT KNOW WHAT A FOR LOOP IS!!!!!!!!!" - said whoever
 	else
 		Log(1, "%s Attempt To Release NULL Ptr", "Mono Screen Texture");
 
-#ifndef GENERAL_FIXES
 	if (MonoScreen[1].tex)
 	{
 		Log(4, "Released %s @ %x - RefCnt = %d", "Mono Screen Texture", MonoScreen[1].tex, MonoScreen[1].tex->Release());
@@ -1770,7 +1141,6 @@ void FreeMonoScreen()	//"I DONT KNOW WHAT A FOR LOOP IS!!!!!!!!!" - said whoever
 	}
 	else
 		Log(1, "%s Attempt To Release NULL Ptr", "Mono Screen Texture");
-#endif
 
 	MonoScreenOn = 0;
 }
@@ -1778,12 +1148,6 @@ void FreeMonoScreen()	//"I DONT KNOW WHAT A FOR LOOP IS!!!!!!!!!" - said whoever
 void RGBM_Mono(uchar* r, uchar* g, uchar* b)
 {
 	uchar c;
-
-#ifdef GENERAL_FIXES
-	if (tomb4.inv_bg_mode == 3)
-		return;
-#endif
-
 	c = (*r + *b) >> 1;
 	*r = c;
 	*g = c;
@@ -1885,126 +1249,9 @@ void MemBltSurf(void* dest, long x, long y, long w, long h, long dadd, void* sou
 	}
 }
 
-#ifdef GENERAL_FIXES
-static void BitMaskGetNumberOfBits(ulong bitMask, ulong *bitDepth, ulong *bitOffset)
-{
-	long i;
-
-	if (!bitMask) 
-	{
-		*bitOffset = 0;
-		*bitDepth = 0;
-		return;
-	}
-
-	for (i = 0; !(bitMask & 1); i++)
-		bitMask >>= 1;
-
-	*bitOffset = i;
-
-	for (i = 0; bitMask != 0; i++)
-		bitMask >>= 1;
-
-	*bitDepth = i;
-}
-
-static void WinVidGetColorBitMasks(COLOR_BIT_MASKS *bm, LPDDPIXELFORMAT pixelFormat)
-{
-	bm->dwRBitMask = pixelFormat->dwRBitMask;
-	bm->dwGBitMask = pixelFormat->dwGBitMask;
-	bm->dwBBitMask = pixelFormat->dwBBitMask;
-	bm->dwRGBAlphaBitMask = pixelFormat->dwRGBAlphaBitMask;
-
-	BitMaskGetNumberOfBits(bm->dwRBitMask, &bm->dwRBitDepth, &bm->dwRBitOffset);
-	BitMaskGetNumberOfBits(bm->dwGBitMask, &bm->dwGBitDepth, &bm->dwGBitOffset);
-	BitMaskGetNumberOfBits(bm->dwBBitMask, &bm->dwBBitDepth, &bm->dwBBitOffset);
-	BitMaskGetNumberOfBits(bm->dwRGBAlphaBitMask, &bm->dwRGBAlphaBitDepth, &bm->dwRGBAlphaBitOffset);
-}
-
-static void CustomBlt(LPDDSURFACEDESCX dst, ulong dstX, ulong dstY, LPDDSURFACEDESCX src, LPRECT srcRect)
-{
-	COLOR_BIT_MASKS srcMask, dstMask;
-	uchar* srcLine;
-	uchar* dstLine;
-	uchar* srcPtr;
-	uchar* dstPtr;
-	ulong srcX, srcY, width, height, srcBpp, dstBpp, color, high, low, r, g, b;
-
-	srcX = srcRect->left;
-	srcY = srcRect->top;
-	width = srcRect->right - srcRect->left;
-	height = srcRect->bottom - srcRect->top;
-	srcBpp = src->ddpfPixelFormat.dwRGBBitCount / 8;
-	dstBpp = dst->ddpfPixelFormat.dwRGBBitCount / 8;
-	WinVidGetColorBitMasks(&srcMask, &src->ddpfPixelFormat);
-	WinVidGetColorBitMasks(&dstMask, &dst->ddpfPixelFormat);
-	srcLine = (uchar*)src->lpSurface + srcY * src->lPitch + srcX * srcBpp;
-	dstLine = (uchar*)dst->lpSurface + dstY * dst->lPitch + dstX * dstBpp;
-
-	for (ulong j = 0; j < height; j++) 
-	{
-		srcPtr = srcLine;
-		dstPtr = dstLine;
-
-		for (ulong i = 0; i < width; i++)
-		{
-			color = 0;
-			memcpy(&color, srcPtr, srcBpp);
-			r = ((color & srcMask.dwRBitMask) >> srcMask.dwRBitOffset);
-			g = ((color & srcMask.dwGBitMask) >> srcMask.dwGBitOffset);
-			b = ((color & srcMask.dwBBitMask) >> srcMask.dwBBitOffset);
-
-			if (srcMask.dwRBitDepth < dstMask.dwRBitDepth) 
-			{
-				high = dstMask.dwRBitDepth - srcMask.dwRBitDepth;
-				low = (srcMask.dwRBitDepth > high) ? srcMask.dwRBitDepth - high : 0;
-				r = (r << high) | (r >> low);
-			}
-			else if (srcMask.dwRBitDepth > dstMask.dwRBitDepth)
-				r >>= srcMask.dwRBitDepth - dstMask.dwRBitDepth;
-
-			if (srcMask.dwGBitDepth < dstMask.dwGBitDepth)
-			{
-				high = dstMask.dwGBitDepth - srcMask.dwGBitDepth;
-				low = (srcMask.dwGBitDepth > high) ? srcMask.dwGBitDepth - high : 0;
-				g = (g << high) | (g >> low);
-			}
-			else if (srcMask.dwGBitDepth > dstMask.dwGBitDepth)
-				g >>= srcMask.dwGBitDepth - dstMask.dwGBitDepth;
-
-
-			if (srcMask.dwBBitDepth < dstMask.dwBBitDepth) 
-			{
-				high = dstMask.dwBBitDepth - srcMask.dwBBitDepth;
-				low = (srcMask.dwBBitDepth > high) ? srcMask.dwBBitDepth - high : 0;
-				b = (b << high) | (b >> low);
-			}
-			else if (srcMask.dwBBitDepth > dstMask.dwBBitDepth)
-				b >>= srcMask.dwBBitDepth - dstMask.dwBBitDepth;
-
-			RGBM_Mono((uchar*)&r, (uchar*)&g, (uchar*)&b);
-			color = dst->ddpfPixelFormat.dwRGBAlphaBitMask; // destination is opaque
-			color |= r << dstMask.dwRBitOffset;
-			color |= g << dstMask.dwGBitOffset;
-			color |= b << dstMask.dwBBitOffset;
-			memcpy(dstPtr, &color, dstBpp);
-			srcPtr += srcBpp;
-			dstPtr += dstBpp;
-		}
-
-		srcLine += src->lPitch;
-		dstLine += dst->lPitch;
-	}
-}
-#endif
-
 void ConvertSurfaceToTextures(LPDIRECTDRAWSURFACEX surface)
 {
 	DDSURFACEDESCX tSurf;
-#ifdef GENERAL_FIXES
-	DDSURFACEDESCX uSurf;
-	RECT r;
-#endif
 	ushort* pTexture;
 	ushort* pSrc;
 
@@ -2012,24 +1259,6 @@ void ConvertSurfaceToTextures(LPDIRECTDRAWSURFACEX surface)
 	tSurf.dwSize = sizeof(DDSURFACEDESCX);
 	surface->Lock(0, &tSurf, DDLOCK_WAIT | DDLOCK_NOSYSLOCK, 0);
 	pSrc = (ushort*)tSurf.lpSurface;
-#ifdef GENERAL_FIXES
-	MonoScreen[0].surface = CreateTexturePage(tSurf.dwWidth, tSurf.dwHeight, 0, NULL, RGBM_Mono, -1);
-
-	memset(&uSurf, 0, sizeof(uSurf));
-	uSurf.dwSize = sizeof(DDSURFACEDESCX);
-	MonoScreen[0].surface->Lock(0, &uSurf, DDLOCK_WAIT | DDLOCK_NOSYSLOCK, 0);
-	pTexture = (ushort*)uSurf.lpSurface;
-
-	r.left = 0;
-	r.top = 0;
-	r.right = tSurf.dwWidth;
-	r.bottom = tSurf.dwHeight;
-	CustomBlt(&uSurf, 0, 0, &tSurf, &r);
-
-	MonoScreen[0].surface->Unlock(0);
-	DXAttempt(MonoScreen[0].surface->QueryInterface(TEXGUID, (void**)&MonoScreen[0].tex));
-	surface->Unlock(0);
-#else
 	pTexture = (ushort*)malloc(0x40000);
 
 	MemBltSurf(pTexture, 0, 0, 256, 256, 256, pSrc, 0, 0, tSurf, 1.0F, 1.0F);
@@ -2055,7 +1284,6 @@ void ConvertSurfaceToTextures(LPDIRECTDRAWSURFACEX surface)
 
 	surface->Unlock(0);
 	free(pTexture);
-#endif
 }
 
 void DoSlider(long x, long y, long width, long height, long pos, long clr1, long clr2, long clr3)

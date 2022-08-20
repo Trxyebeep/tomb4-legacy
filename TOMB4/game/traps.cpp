@@ -1566,15 +1566,6 @@ void FlameControl(short fx_number)
 	FX_INFO* fx;
 	long r, g, b, wh;
 
-#ifdef GENERAL_FIXES
-	if (lara.water_status == LW_FLYCHEAT)
-	{
-		KillEffect(fx_number);
-		lara.burn = 0;
-		return;
-	}
-#endif
-
 	fx = &effects[fx_number];
 
 	for (int i = 14; i > 0; i--)

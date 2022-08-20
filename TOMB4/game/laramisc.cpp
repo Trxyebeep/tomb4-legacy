@@ -14,11 +14,6 @@
 #include "../specific/3dmath.h"
 #include "spotcam.h"
 #include "camera.h"
-#ifdef GENERAL_FIXES
-#include "newinv.h"
-#include "../specific/dxshell.h"
-#include "../tomb4/tomb4.h"
-#endif
 #include "../specific/input.h"
 #include "savegame.h"
 #include "gameflow.h"
@@ -27,6 +22,7 @@
 COLL_INFO mycoll;
 
 static COLL_INFO* lara_coll = &mycoll;
+static short cheat_hit_points;
 
 void LaraCheatGetStuff()
 {
@@ -48,89 +44,6 @@ void LaraCheatGetStuff()
 
 void LaraCheatyBits()
 {
-	static short cheat_hit_points;
-
-#ifdef GENERAL_FIXES
-	if (!tomb4.cheats)
-		return;
-
-#ifdef _DEBUG
-	if (keymap[DIK_F1])
-	{
-		lara.num_large_medipack = -1;
-		lara.num_small_medipack = -1;
-		lara.num_revolver_ammo = -1;
-		lara.num_uzi_ammo = -1;
-		lara.num_crossbow_ammo1 = -1;
-		lara.num_crossbow_ammo2 = -1;
-		lara.num_crossbow_ammo3 = -1;
-		lara.num_grenade_ammo1 = -1;
-		lara.num_grenade_ammo2 = -1;
-		lara.num_grenade_ammo3 = -1;
-		lara.num_flares = -1;
-		lara.num_shotgun_ammo1 = -1;
-		lara.num_shotgun_ammo2 = -1;
-		savegame.HaveBikeBooster = 1;
-
-		if (objects[LASERSIGHT_ITEM].loaded)
-			lara.lasersight = 1;
-
-		if (!(gfLevelFlags & GF_YOUNGLARA))
-		{
-			lara.pistols_type_carried |= 1;
-			lara.uzis_type_carried |= 1;
-			lara.shotgun_type_carried |= 1;
-			lara.crossbow_type_carried |= 1;
-			lara.grenade_type_carried |= 1;
-			lara.sixshooter_type_carried |= 1;
-		}
-
-		dels_give_lara_items_cheat();
-		lara_item->hit_points = 1000;
-	}
-#endif
-
-#ifdef _DEBUG
-	if (keymap[DIK_F2])
-#else
-	if (keymap[DIK_D] && keymap[DIK_O] && keymap[DIK_Z] && keymap[DIK_Y])
-#endif
-	{
-		if (lara.vehicle != NO_ITEM)
-			return;
-
-		lara_item->pos.y_pos -= 128;
-
-		if (lara.water_status != LW_FLYCHEAT)
-		{
-			lara.water_status = LW_FLYCHEAT;
-			lara_item->frame_number = anims[ANIM_SWIMCHEAT].frame_base;
-			lara_item->anim_number = ANIM_SWIMCHEAT;
-			lara_item->current_anim_state = AS_SWIM;
-			lara_item->goal_anim_state = AS_SWIM;
-			lara_item->gravity_status = 0;
-			lara_item->pos.x_rot = 0;
-			lara.air = 1800;
-			lara.death_count = 0;
-			lara.torso_y_rot = 0;
-			lara.torso_x_rot = 0;
-			lara.head_y_rot = 0;
-			lara.head_x_rot = 0;
-		}
-	}
-
-#ifdef _DEBUG
-	if (keymap[DIK_F3])
-	{
-		if (gfCurrentLevel == 2 || gfCurrentLevel == 6 || gfCurrentLevel == 13 || gfCurrentLevel == 21 || gfCurrentLevel == 27)
-			skipped_level = 1;
-
-		gfRequiredStartPos = 0;
-		gfLevelComplete = gfCurrentLevel + 1;
-	}
-#endif
-
-#else
 	if (!Gameflow->CheatEnabled)
 		return;
 
@@ -163,7 +76,6 @@ void LaraCheatyBits()
 			cheat_hit_points = lara_item->hit_points;
 		}
 	}
-#endif
 }
 
 void LaraCheat(ITEM_INFO* item, COLL_INFO* coll)
@@ -185,9 +97,7 @@ void LaraCheat(ITEM_INFO* item, COLL_INFO* coll)
 		lara.gun_status = 0;
 		LaraInitialiseMeshes();
 		lara.mesh_effects = 0;
-#ifndef GENERAL_FIXES
 		lara_item->hit_points = cheat_hit_points;
-#endif
 	}
 }
 
@@ -495,11 +405,7 @@ void LaraControl(short item_number)
 			case LW_WADE:
 				camera.target_elevation = -4004;
 
-#ifdef GENERAL_FIXES
-				if (hfw > 256)
-#else
 				if (hfw >= 256)
-#endif
 				{
 					if (hfw > 730)
 					{

@@ -445,10 +445,6 @@ void SethControl(short item_number)
 	floor = GetFloor(x, y, z, &room_number);
 	h = GetHeight(floor, x, y, z);
 
-#ifdef GENERAL_FIXES
-	CreatureAIInfo(item, &info);	//using info without initializing it, at the end...
-#endif
-
 	if (item->hit_points <= 0)
 		item->hit_points = 0;
 	else

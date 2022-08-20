@@ -23,9 +23,6 @@
 #include "effect2.h"
 #include "camera.h"
 #include "effects.h"
-#ifdef FOOTPRINTS
-#include "footprnt.h"
-#endif
 #include "lara.h"
 #include "gameflow.h"
 
@@ -222,20 +219,6 @@ void InterpolateMatrix()
 {
 	if (IM_rate == 2 || (IM_frac == 2 && IM_rate == 4))
 	{
-#ifdef GENERAL_FIXES
-		phd_mxptr[M00] += (IMptr[M00] - phd_mxptr[M00]) >> 1;
-		phd_mxptr[M01] += (IMptr[M01] - phd_mxptr[M01]) >> 1;
-		phd_mxptr[M02] += (IMptr[M02] - phd_mxptr[M02]) >> 1;
-		phd_mxptr[M03] += (IMptr[M03] - phd_mxptr[M03]) >> 1;
-		phd_mxptr[M10] += (IMptr[M10] - phd_mxptr[M10]) >> 1;
-		phd_mxptr[M11] += (IMptr[M11] - phd_mxptr[M11]) >> 1;
-		phd_mxptr[M12] += (IMptr[M12] - phd_mxptr[M12]) >> 1;
-		phd_mxptr[M13] += (IMptr[M13] - phd_mxptr[M13]) >> 1;
-		phd_mxptr[M20] += (IMptr[M20] - phd_mxptr[M20]) >> 1;
-		phd_mxptr[M21] += (IMptr[M21] - phd_mxptr[M21]) >> 1;
-		phd_mxptr[M22] += (IMptr[M22] - phd_mxptr[M22]) >> 1;
-		phd_mxptr[M23] += (IMptr[M23] - phd_mxptr[M23]) >> 1;
-#else
 		phd_mxptr[M00] = (phd_mxptr[M00] + IMptr[M00]) >> 1;
 		phd_mxptr[M01] = (phd_mxptr[M01] + IMptr[M01]) >> 1;
 		phd_mxptr[M02] = (phd_mxptr[M02] + IMptr[M02]) >> 1;
@@ -248,7 +231,6 @@ void InterpolateMatrix()
 		phd_mxptr[M21] = (phd_mxptr[M21] + IMptr[M21]) >> 1;
 		phd_mxptr[M22] = (phd_mxptr[M22] + IMptr[M22]) >> 1;
 		phd_mxptr[M23] = (phd_mxptr[M23] + IMptr[M23]) >> 1;
-#endif
 	}
 	else if (IM_frac == 1)
 	{
@@ -583,66 +565,6 @@ void DrawAnimatingItem(ITEM_INFO* item)
 	phd_PopMatrix();
 }
 
-#ifdef GENERAL_FIXES
-static void DoMirrorStuff()
-{
-	LARA_ARM larm;
-	LARA_ARM rarm;
-	short old_anim, old_frame;
-
-	larm = lara.left_arm;
-	rarm = lara.right_arm;
-	old_anim = lara_item->anim_number;
-	old_frame = lara_item->frame_number;
-
-	if (BinocularRange)
-	{
-		if (LaserSight)
-		{
-			if (lara.gun_type == WEAPON_REVOLVER)
-			{
-				lara.left_arm.anim_number = objects[SIXSHOOTER_ANIM].anim_index + 3;
-				lara.right_arm.anim_number = objects[SIXSHOOTER_ANIM].anim_index + 3;
-				lara.left_arm.frame_number = anims[lara.left_arm.anim_number].frame_base;
-				lara.right_arm.frame_number = anims[lara.right_arm.anim_number].frame_base;
-			}
-
-			if (lara.gun_type == WEAPON_CROSSBOW)
-			{
-				lara.left_arm.anim_number = objects[CROSSBOW_ANIM].anim_index + 2;			
-				lara.right_arm.anim_number = objects[CROSSBOW_ANIM].anim_index + 2;
-				lara.left_arm.frame_number = 0;
-				lara.right_arm.frame_number = 0;
-			}
-
-			lara.left_arm.frame_base = anims[lara.left_arm.anim_number].frame_ptr;
-			lara.right_arm.frame_base = anims[lara.right_arm.anim_number].frame_ptr;
-		}
-		else
-		{
-			lara_item->anim_number = ANIM_BINOCS;
-			lara_item->frame_number = anims[ANIM_BINOCS].frame_base;
-			lara.mesh_ptrs[LM_RHAND] = meshes[objects[MESHSWAP2].mesh_index + 2 * LM_RHAND];
-		}
-	}
-	
-	Draw_Mirror_Lara();
-
-	if (BinocularRange)
-	{
-		lara.left_arm = larm;
-		lara.right_arm = rarm;
-
-		if (!LaserSight)
-		{
-			lara_item->anim_number = old_anim;
-			lara_item->frame_number = old_frame;
-			lara.mesh_ptrs[LM_RHAND] = meshes[objects[LARA_SKIN].mesh_index + 2 * LM_RHAND];
-		}
-	}
-}
-#endif
-
 void DrawRooms(short CurrentRoom)
 {
 	ROOM_INFO* r;
@@ -805,11 +727,7 @@ void DrawRooms(short CurrentRoom)
 			}
 
 			if (gfLevelFlags & GF_MIRROR && lara_item->room_number == gfMirrorRoom)
-#ifdef GENERAL_FIXES
-				DoMirrorStuff();
-#else
 				Draw_Mirror_Lara();
-#endif
 		}
 	}
 
@@ -862,9 +780,6 @@ void DrawRooms(short CurrentRoom)
 	DrawScarabs();
 	DrawLocusts();
 	DrawLightning();
-#ifdef FOOTPRINTS
-	S_DrawFootPrints();
-#endif
 	lara_item->pos.x_pos = lx;
 	lara_item->pos.y_pos = ly;
 	lara_item->pos.z_pos = lz;

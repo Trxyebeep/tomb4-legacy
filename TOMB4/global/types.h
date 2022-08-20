@@ -57,18 +57,8 @@ do \
 #define WINDOW_STYLE	(WS_OVERLAPPED | WS_BORDER | WS_CAPTION)
 #define W2V_SHIFT	14
 #define MAX_SAMPLES	370
-
-#ifdef GENERAL_FIXES
-#define MAX_DYNAMICS	64
-#else
 #define MAX_DYNAMICS	32
-#endif
-
-#ifdef GENERAL_FIXES
-#define MALLOC_SIZE	15000000	//15MB
-#else
 #define MALLOC_SIZE	5000000		//5MB
-#endif
 
 /********************DX defs********************/
 #define LPDIRECTDRAWX			LPDIRECTDRAW4
@@ -87,7 +77,7 @@ do \
 #define DDGUID					IID_IDirectDraw4
 #define D3DGUID					IID_IDirect3D3
 
-#if (DIRECTINPUT_VERSION >= 0x800)
+#if 1
 #define DIGUID					IID_IDirectInput8
 #define DIDGUID					IID_IDirectInputDevice8
 #else
@@ -2262,58 +2252,4 @@ struct TRAIN_STATIC
 	short type;
 	short zoff;
 };
-
-#ifdef IMPROVED_BARS
-struct GouraudBarColourSet
-{
-	uchar abLeftRed[5];
-	uchar abLeftGreen[5];
-	uchar abLeftBlue[5];
-	uchar abRightRed[5];
-	uchar abRightGreen[5];
-	uchar abRightBlue[5];
-};
-#endif
-
-#ifdef GENERAL_FIXES
-struct COLOR_BIT_MASKS
-{
-	ulong dwRBitMask;
-	ulong dwGBitMask;
-	ulong dwBBitMask;
-	ulong dwRGBAlphaBitMask;
-	ulong dwRBitDepth;
-	ulong dwGBitDepth;
-	ulong dwBBitDepth;
-	ulong dwRGBAlphaBitDepth;
-	ulong dwRBitOffset;
-	ulong dwGBitOffset;
-	ulong dwBBitOffset;
-	ulong dwRGBAlphaBitOffset;
-};
-
-struct tomb4_options	//keep this at the bottom of the file, please
-{
-	bool footprints;
-	ulong shadow_mode;			//1-> original, 2-> circle, 3-> PSX like circle, 4-> PSX sprite
-	bool crawltilt;
-	bool flexible_crawling;
-	bool fix_climb_up_delay;
-	bool gameover;
-	ulong bar_mode;				//1-> original, 2-> TR5, 3-> PSX
-	ulong bars_pos;				//1-> original, 2-> improved, 3-> PSX
-	bool enemy_bars;
-	bool cutseq_skipper;
-	bool cheats;
-	bool loadingtxt;
-	ulong inv_bg_mode;			//1-> original, 2->TR5, 3-> clear
-	bool tr5_loadbar;
-	bool look_transparency;
-	bool ammo_counter;
-	bool ammotype_hotkeys;
-	bool combat_cam_tilt;
-	bool hpbar_inv;
-	bool static_lighting;
-};
-#endif
 #pragma pack(pop)

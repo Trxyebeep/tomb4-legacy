@@ -5,10 +5,6 @@
 #include "control.h"
 #include "camera.h"
 #include "switch.h"
-#ifdef GENERAL_FIXES
-#include "../specific/dxshell.h"
-#include "../tomb4/tomb4.h"
-#endif
 #include "../specific/input.h"
 #include "lara.h"
 #include "gameflow.h"
@@ -366,11 +362,6 @@ void CalculateSpotCams()
 	}
 	else if (!spotcam_timer)
 		current_spline_position += cspeed;
-
-#ifdef GENERAL_FIXES
-	if (tomb4.cutseq_skipper && keymap[DIK_ESCAPE] && gfCurrentLevel)
-		current_spline_position = 0x10000;
-#endif
 
 	if (!(input & IN_LOOK))
 		bFirstLook = 0;

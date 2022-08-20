@@ -6,17 +6,6 @@
 #include "spotcam.h"
 #include "control.h"
 #include "../specific/3dmath.h"
-#ifdef ENEMY_BARS
-#include "../tomb4/tomb4.h"
-#include "objects.h"
-#endif
-#ifdef AMMO_COUNTER
-#include "larafire.h"
-#include "camera.h"
-#endif
-#ifdef GENERAL_FIXES
-#include "../specific/input.h"
-#endif
 #include "lara.h"
 #include "deltapak.h"
 #include "savegame.h"
@@ -51,10 +40,6 @@ void DrawGameInfo(long timed)
 {
 	long flash_state, seconds;
 	char buf[80];
-#ifdef AMMO_COUNTER
-	long length;
-	short ammo, btm;
-#endif
 
 	if (!GLOBAL_playing_cutseq && !bDisableLaraControl && gfGameMode != 1)
 	{
@@ -66,58 +51,12 @@ void DrawGameInfo(long timed)
 		if (DashTimer < 120)
 			S_DrawDashBar(100 * DashTimer / 120);
 
-#ifdef ENEMY_BARS
-		if (lara.target)
-		{
-			if (tomb4.enemy_bars && lara.target->hit_points > 0)
-			{
-				if (lara.target->object_number == LARA_DOUBLE)
-					S_DrawEnemyBar(lara_item->hit_points / 10);
-				else if (lara.target->object_number == SKELETON)
-					S_DrawEnemyBar(100);
-				else
-					S_DrawEnemyBar(100 * lara.target->hit_points / objects[lara.target->object_number].hit_points);
-			}
-		}
-#endif
-
 		if (gfLevelFlags & GF_TIMER && savegame.Level.Timer && savegame.Level.Timer < 108000)
 		{
 			seconds = savegame.Level.Timer / 30;
 			sprintf(buf, "%.2d:%.2d:%.2d", seconds / 60, seconds % 60, (334 * (savegame.Level.Timer % 30)) / 100);
 			PrintString(ushort(phd_winwidth >> 1), (ushort)font_height, 0, buf, 0x8000);
 		}
-
-#ifdef AMMO_COUNTER
-		if (tomb4.ammo_counter)
-		{
-			if (lara.gun_status == LG_READY)
-			{
-				ammo = *get_current_ammo_pointer(lara.gun_type);
-
-				if (ammo != -1)
-				{
-					if (lara.gun_type == WEAPON_SHOTGUN)
-						ammo /= 6;
-
-					sprintf(buf, "%i", ammo);
-					length = GetStringLength(buf, 0, &btm);
-					PrintString(ushort(LaserSight ? phd_centerx + 30 : (phd_winxmax - length - 80)), phd_winymax - btm - 70, 0, buf, 0);
-				}
-			}
-		}
-#endif
-
-#ifdef GENERAL_FIXES	//Ammotype change tings
-		if (ammo_change_timer)
-		{
-			ammo_change_timer--;
-			PrintString(ushort(phd_winwidth >> 1), (ushort)font_height, 5, ammo_change_buf, 0x8000);
-
-			if (ammo_change_timer <= 0)
-				ammo_change_timer = 0;
-		}
-#endif
 	}
 }
 

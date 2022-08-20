@@ -9,55 +9,6 @@
 #include "../specific/3dmath.h"
 #include "camera.h"
 #include "../specific/input.h"
-#ifdef GENERAL_FIXES
-#include "effect2.h"
-#endif
-
-#ifdef GENERAL_FIXES
-static void lara_as_swimcheat(ITEM_INFO* item, COLL_INFO* coll)
-{
-	if (input & IN_FORWARD)
-		item->pos.x_rot -= 546;
-	else if (input & IN_BACK)
-		item->pos.x_rot += 546;
-
-	if (input & IN_LEFT)
-	{
-		lara.turn_rate -= 613;
-
-		if (lara.turn_rate < -1092)
-			lara.turn_rate = -1092;
-	}
-	else if (input & IN_RIGHT)
-	{
-		lara.turn_rate += 613;
-
-		if (lara.turn_rate > 1092)
-			lara.turn_rate = 1092;
-	}
-
-	if (input & IN_ACTION)
-		TriggerDynamic(item->pos.x_pos, item->pos.y_pos, item->pos.z_pos, 31, 255, 255, 255);
-
-	if (input & IN_ROLL)
-		lara.turn_rate = -2184;
-
-	if (input & IN_JUMP)
-	{
-		item->fallspeed += 16;
-
-		if (item->fallspeed > 400)
-			item->fallspeed = 400;
-	}
-	else
-	{
-		if (item->fallspeed >= 8)
-			item->fallspeed -= item->fallspeed >> 3;
-		else
-			item->fallspeed = 0;
-	}
-}
-#endif
 
 void lara_as_swim(ITEM_INFO* item, COLL_INFO* coll)
 {
@@ -94,13 +45,7 @@ void LaraUnderWater(ITEM_INFO* item, COLL_INFO* coll)
 	coll->old.x = item->pos.x_pos;
 	coll->old.y = item->pos.y_pos;
 	coll->old.z = item->pos.z_pos;
-
-#ifdef GENERAL_FIXES
-	if (lara.water_status == LW_FLYCHEAT)
-		coll->radius = 100;
-	else
-#endif
-		coll->radius = 300;
+	coll->radius = 300;
 
 	coll->trigger = 0;
 	coll->slopes_are_walls = 0;
@@ -146,7 +91,6 @@ void LaraUnderWater(ITEM_INFO* item, COLL_INFO* coll)
 	if (lara.current_active && lara.water_status != LW_FLYCHEAT)
 		LaraWaterCurrent(coll);
 
-#ifndef GENERAL_FIXES
 	if (lara.water_status == LW_FLYCHEAT)
 	{
 		if (input & IN_ACTION)
@@ -162,7 +106,6 @@ void LaraUnderWater(ITEM_INFO* item, COLL_INFO* coll)
 			item->speed = 0;
 		}
 	}
-#endif
 
 	AnimateLara(item);
 	item->pos.x_pos += (((phd_sin(item->pos.y_rot) * item->fallspeed) >> 16) * phd_cos(item->pos.x_rot)) >> W2V_SHIFT;
@@ -211,42 +154,33 @@ void lara_col_waterroll(ITEM_INFO* item, COLL_INFO* coll)
 
 void lara_as_glide(ITEM_INFO* item, COLL_INFO* coll)
 {
-#ifdef GENERAL_FIXES
-	if (lara.water_status == LW_FLYCHEAT)
-		lara_as_swimcheat(item, coll);
-	else if (lara.water_status != LW_ABOVE_WATER)
+	if (item->hit_points <= 0)
 	{
-#endif
-		if (item->hit_points <= 0)
-		{
-			item->goal_anim_state = AS_UWDEATH;
-			return;
-		}
-
-		if (input & IN_ROLL)
-		{
-			item->current_anim_state = AS_WATERROLL;
-			item->anim_number = ANIM_WATERROLL;
-			item->frame_number = anims[ANIM_WATERROLL].frame_base;
-		}
-		else
-		{
-			SwimTurn(item);
-
-			if (input & IN_JUMP)
-				item->goal_anim_state = AS_SWIM;
-
-			item->fallspeed -= 6;
-
-			if (item->fallspeed < 0)
-				item->fallspeed = 0;
-
-			if (item->fallspeed <= 133)
-				item->goal_anim_state = AS_TREAD;
-		}
-#ifdef GENERAL_FIXES
+		item->goal_anim_state = AS_UWDEATH;
+		return;
 	}
-#endif
+
+	if (input & IN_ROLL)
+	{
+		item->current_anim_state = AS_WATERROLL;
+		item->anim_number = ANIM_WATERROLL;
+		item->frame_number = anims[ANIM_WATERROLL].frame_base;
+	}
+	else
+	{
+		SwimTurn(item);
+
+		if (input & IN_JUMP)
+			item->goal_anim_state = AS_SWIM;
+
+		item->fallspeed -= 6;
+
+		if (item->fallspeed < 0)
+			item->fallspeed = 0;
+
+		if (item->fallspeed <= 133)
+			item->goal_anim_state = AS_TREAD;
+	}
 }
 
 void lara_as_tread(ITEM_INFO* item, COLL_INFO* coll)
@@ -306,12 +240,7 @@ void lara_as_uwdeath(ITEM_INFO* item, COLL_INFO* coll)
 
 void lara_as_waterroll(ITEM_INFO* item, COLL_INFO* coll)
 {
-#ifdef GENERAL_FIXES
-	if (lara.water_status == LW_FLYCHEAT)
-		item->current_anim_state = AS_GLIDE;
-	else
-#endif
-		item->fallspeed = 0;
+	item->fallspeed = 0;
 }
 
 void lara_col_uwdeath(ITEM_INFO* item, COLL_INFO* coll)

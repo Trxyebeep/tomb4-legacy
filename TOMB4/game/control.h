@@ -92,7 +92,3 @@ extern short FXType;
 extern char PoisonFlag;
 extern char TriggerTimer;
 extern char LaserSightActive;
-
-#ifdef GENERAL_FIXES
-extern char DeathMenuActive;
-#endif

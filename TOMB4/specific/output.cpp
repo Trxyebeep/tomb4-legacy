@@ -25,13 +25,8 @@
 #include "../game/deltapak.h"
 #include "../game/health.h"
 #include "../game/control.h"
-#ifdef GENERAL_FIXES
-#include "../game/text.h"
 #include "../game/gameflow.h"
-#include "../tomb4/tomb4.h"
-#include "../game/spotcam.h"
-#include "../game/effect2.h"
-#endif
+#include "../game/text.h"
 
 D3DTLVERTEX SkinVerts[40][12];
 short SkinClip[40][12];
@@ -62,11 +57,7 @@ void phd_PutPolygons(short* objptr, long clip)	//whore
 
 	if (objptr)
 	{
-#ifdef GENERAL_FIXES
-		if (objptr == meshes[objects[LARA_DOUBLE].mesh_index] || objptr == meshes[objects[LARA_DOUBLE].mesh_index + 2])
-#else
 		if (objptr == meshes[objects[LARA_DOUBLE].mesh_index])	//forgets mesh 1, also somehow applies to Lara's 'hips'.
-#endif
 			envmap_sprite = &spriteinfo[objects[SKY_GRAPHICS].mesh_index];
 		else
 			envmap_sprite = &spriteinfo[objects[DEFAULT_SPRITES].mesh_index + 11];
@@ -396,66 +387,17 @@ void ProjectTrainVerts(short nVerts, D3DTLVERTEX* v, short* clip, long x)
 
 void PrelightVerts(long nVerts, D3DTLVERTEX* v, MESH_DATA* mesh)
 {
-#ifdef GENERAL_FIXES
-	D3DVERTEX* vtx;
-	DYNAMIC* dptr;
-	PHD_VECTOR t, d, u, w;
-	float fVal;
-#endif
 	long r, g, b, sr, sg, sb;
 
 	sr = (StaticMeshShade & 0x1F) << 3;
 	sg = ((StaticMeshShade >> 5) & 0x1F) << 3;
 	sb = ((StaticMeshShade >> 10) & 0x1F) << 3;
-#ifdef GENERAL_FIXES
-	vtx = 0;
-
-	if (tomb4.static_lighting)
-	{
-		u.x = phd_mxptr[M03] >> W2V_SHIFT;
-		u.y = phd_mxptr[M13] >> W2V_SHIFT;
-		u.z = phd_mxptr[M23] >> W2V_SHIFT;
-		ApplyTransposeMatrix(w2v_matrix, &u, &t);
-		t.x += w2v_matrix[M03];
-		t.y += w2v_matrix[M13];
-		t.z += w2v_matrix[M23];
-		mesh->SourceVB->Lock(DDLOCK_READONLY, (void**)&vtx, NULL);
-	}
-#endif
 
 	for (int i = 0; i < nVerts; i++)
 	{
 		r = CLRR(v->color) + ((sr * (mesh->prelight[i] & 0xFF)) >> 8);
 		g = CLRG(v->color) + ((sg * (mesh->prelight[i] & 0xFF)) >> 8);
 		b = CLRB(v->color) + ((sb * (mesh->prelight[i] & 0xFF)) >> 8);
-
-#ifdef GENERAL_FIXES
-		if (tomb4.static_lighting)
-		{
-			for (int j = 0; j < MAX_DYNAMICS; j++)
-			{
-				dptr = &dynamics[j];
-
-				if (dptr->on)
-				{
-					d.x = dptr->x - t.x;
-					d.y = dptr->y - t.y;
-					d.z = dptr->z - t.z;
-					ApplyMatrix(w2v_matrix, &d, &w);
-					ApplyTransposeMatrix(phd_mxptr, &w, &u);
-					fVal = sqrt(SQUARE(u.x - vtx[i].x) + SQUARE(u.y - vtx[i].y) + SQUARE(u.z - vtx[i].z)) * 1.7F;
-
-					if (fVal <= dptr->falloff)
-					{
-						fVal = (dptr->falloff - fVal) / dptr->falloff;
-						r += (long)(fVal * dptr->r);
-						g += (long)(fVal * dptr->g);
-						b += (long)(fVal * dptr->b);
-					}
-				}
-			}
-		}
-#endif
 
 		if (r > 255)
 			r = 255;
@@ -477,11 +419,6 @@ void PrelightVerts(long nVerts, D3DTLVERTEX* v, MESH_DATA* mesh)
 		CalcColorSplit(v->color, &v->color);
 		v++;
 	}
-
-#ifdef GENERAL_FIXES
-	if (tomb4.static_lighting)
-		mesh->SourceVB->Unlock();
-#endif
 }
 
 void _InsertRoom(ROOM_INFO* r)
@@ -504,9 +441,6 @@ void RenderLoadPic(long unused)
 	camera.target.y = gfLoadTarget.y;
 	camera.target.z = gfLoadTarget.z;
 	camera.pos.room_number = gfLoadRoom;
-#ifdef GENERAL_FIXES
-	camera.underwater = room[gfLoadRoom].flags & ROOM_UNDERWATER;
-#endif
 
 	if (gfLoadRoom == 255)
 		return;
@@ -527,19 +461,6 @@ void RenderLoadPic(long unused)
 		phd_LookAt(camera.pos.x, camera.pos.y, camera.pos.z, camera.target.x, camera.target.y, camera.target.z, 0);
 		S_InitialisePolyList();
 		RenderIt(camera.pos.room_number);
-
-#ifdef GENERAL_FIXES
-		if (tomb4.loadingtxt && !tomb4.tr5_loadbar)
-		{
-			if (tomb4.bar_mode == 2 || tomb4.bar_mode == 3)
-				PrintString((ushort)phd_centerx, ushort((float((480 - (font_height >> 1)) * float(phd_winymax / 480.0F))) - (font_height >> 1)),
-					5, SCRIPT_TEXT(TXT_LOADING2), FF_CENTER);
-			else
-				PrintString((ushort)phd_centerx, ushort((float(phd_winymax / 480.0F) + (phd_winymax - font_height)) - (font_height >> 1)),
-					5, SCRIPT_TEXT(TXT_LOADING2), FF_CENTER);
-		}
-#endif
-
 		S_OutputPolyList();
 		S_DumpScreen();
 
@@ -548,19 +469,6 @@ void RenderLoadPic(long unused)
 	phd_LookAt(camera.pos.x, camera.pos.y, camera.pos.z, camera.target.x, camera.target.y, camera.target.z, 0);
 	S_InitialisePolyList();
 	RenderIt(camera.pos.room_number);
-
-#ifdef GENERAL_FIXES
-	if (tomb4.loadingtxt && !tomb4.tr5_loadbar)
-	{
-		if (tomb4.bar_mode == 2 || tomb4.bar_mode == 3)
-			PrintString((ushort)phd_centerx, ushort((float((480 - (font_height >> 1)) * float(phd_winymax / 480.0F))) - (font_height >> 1)),
-				5, SCRIPT_TEXT(TXT_LOADING2), FF_CENTER);
-		else
-			PrintString((ushort)phd_centerx, ushort((float(phd_winymax / 480.0F) + (phd_winymax - font_height)) - (font_height >> 1)),
-				5, SCRIPT_TEXT(TXT_LOADING2), FF_CENTER);
-	}
-#endif
-
 	S_OutputPolyList();
 	S_DumpScreen();
 	lara.poisoned = poisoned;
@@ -578,11 +486,7 @@ void S_InitialisePolyList()
 	rect.y2 = App.dx.rViewport.top + App.dx.rViewport.bottom;
 
 	if (gfLevelFlags & GF_TRAIN)
-#ifdef GENERAL_FIXES
-		col = 0xD2B163;
-#else
 		col = 0xCEAE60;
-#endif
 	else if (gfCurrentLevel == 5 || gfCurrentLevel == 6)
 	{
 		col = FogTableColor[19];
@@ -593,7 +497,7 @@ void S_InitialisePolyList()
 	
 	if (App.dx.Flags & 0x80)
 		DXAttempt(App.dx.lpViewport->Clear2(1, &rect, D3DCLEAR_TARGET, col, 1.0F, 0));
-#ifndef GENERAL_FIXES
+#if	0
 	else
 		ClearFakeDevice(App.dx.lpD3DDevice, 1, &rect, D3DCLEAR_TARGET, col, 1.0F, 0);
 #endif
@@ -1272,11 +1176,7 @@ void S_OutputPolyList()
 		DrawSortList();
 	}
 
-#ifdef GENERAL_FIXES
-	if (pickups[CurrentPickup].life != -1 && !MonoScreenOn && !GLOBAL_playing_cutseq && !bDisableLaraControl)
-#else
 	if (pickups[CurrentPickup].life != -1 && !MonoScreenOn && !GLOBAL_playing_cutseq)
-#endif
 	{
 		bWaterEffect = 0;
 		InitialiseSortList();

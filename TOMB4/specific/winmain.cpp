@@ -16,9 +16,7 @@
 #include "../game/gameflow.h"
 #include "dxsound.h"
 #include "gamemain.h"
-#ifdef GENERAL_FIXES
-#include "fmv.h"
-#endif
+#include "fmv.h"	//not for original code
 
 static COMMANDLINES commandlines[] =
 {
@@ -195,9 +193,6 @@ void WinDisplayString(long x, long y, char* string, ...)
 
 long CheckMMXTechnology()
 {
-#ifdef GENERAL_FIXES	//original works but is dodgy as fuck
-	return 0;
-#else
 	ulong _edx;
 	long mmx;
 
@@ -241,7 +236,6 @@ long CheckMMXTechnology()
 		mmx = 0;
 
 	return mmx;
-#endif
 }
 
 void WinProcMsg()
@@ -476,7 +470,7 @@ void ClearSurfaces()
 
 	if (App.dx.Flags & 0x80)
 		DXAttempt(App.dx.lpViewport->Clear2(1, &r, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0, 1.0F, 0));
-#ifndef GENERAL_FIXES
+#if 0
 	else
 		ClearFakeDevice(App.dx.lpD3DDevice, 1, &r, D3DCLEAR_TARGET, 0, 1.0F, 0);
 #endif
@@ -485,7 +479,7 @@ void ClearSurfaces()
 
 	if (App.dx.Flags & 0x80)
 		DXAttempt(App.dx.lpViewport->Clear2(1, &r, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0, 1.0F, 0));
-#ifndef GENERAL_FIXES
+#if 0
 	else
 		ClearFakeDevice(App.dx.lpD3DDevice, 1, &r, D3DCLEAR_TARGET, 0, 1.0F, 0);
 #endif
@@ -578,7 +572,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 		LoadSettings();
 	}
 
-#ifdef GENERAL_FIXES
+#if 1	//not original code
 	if (!fmvs_disabled)
 	{
 		if (!LoadBinkStuff())
@@ -604,14 +598,6 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 		MessageBox(0, SCRIPT_TEXT(TXT_Failed_To_Setup_DirectX), "Tomb Raider IV", 0);
 		return 0;
 	}
-
-#ifdef GENERAL_FIXES	//remove the border in fullscreen
-	if (G_dxptr->Flags & 1)
-	{
-		SetWindowLongPtr(App.hWnd, GWL_STYLE, WS_POPUP);
-		SetWindowPos(App.hWnd, 0, App.dx.rScreen.left, App.dx.rScreen.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-	}
-#endif
 
 	UpdateWindow(App.hWnd);
 	ShowWindow(App.hWnd, nShowCmd);
@@ -665,9 +651,6 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 
 long MungeFPCW(short* fpcw)
 {
-#ifdef GENERAL_FIXES
-	return 0;
-#else
 	long ret;
 	short cw, temp;
 
@@ -695,15 +678,12 @@ long MungeFPCW(short* fpcw)
 
 	*fpcw = cw;
 	return ret;
-#endif
 }
 
 void RestoreFPCW(short fpcw)
 {
-#ifndef GENERAL_FIXES
 	__asm
 	{
 		fldcw fpcw
 	}
-#endif
 }

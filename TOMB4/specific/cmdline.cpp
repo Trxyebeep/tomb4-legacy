@@ -74,7 +74,11 @@ void InitTFormats(HWND dlg, HWND hwnd)
 
 	SendMessage(hwnd, CB_RESETCONTENT, 0, 0);
 	EnableWindow(GetDlgItem(dlg, 1006), 1);
+#if	1
+	software = 0;
+#else
 	software = SendMessage(GetDlgItem(dlg, 1011), BM_GETCHECK, 0, 0);
+#endif
 	device = &App.DXInfo.DDInfo[nDDDevice].D3DDevices[nD3DDevice];
 
 	for (int i = 0; i < device->nTextureInfos; i++)
@@ -114,10 +118,11 @@ void InitResolution(HWND dlg, HWND hwnd, bool resetvms)
 
 	n = 0;
 
-#ifdef GENERAL_FIXES
-	SendMessage(GetDlgItem(dlg, 1010), BM_SETCHECK, 1, 0);
+#if	1
+	SendMessage(GetDlgItem(dlg, 1010), BM_SETCHECK, 1, 0);		//disable software renderer option
 	SendMessage(GetDlgItem(dlg, 1011), BM_SETCHECK, 0, 0);
 	EnableWindow(GetDlgItem(dlg, 1011), 0);
+	software = 0;
 #else
 	if (nD3DDevice)
 	{
@@ -129,9 +134,9 @@ void InitResolution(HWND dlg, HWND hwnd, bool resetvms)
 		SendMessage(GetDlgItem(dlg, 1010), BM_SETCHECK, 0, 0);
 		SendMessage(GetDlgItem(dlg, 1011), BM_SETCHECK, 1, 0);
 	}
-#endif
 
 	software = SendMessage(GetDlgItem(dlg, 1011), BM_GETCHECK, 0, 0);
+#endif
 
 	if (resetvms)
 	{
