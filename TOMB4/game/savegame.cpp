@@ -193,6 +193,7 @@ void sgRestoreLevel()
 	AIOBJECT* lsp;
 	ITEM_INFO* item;
 	FLOOR_INFO* floor;
+	int i;
 
 	if (OpenSaveGame(gfCurrentLevel, 0) >= 0)
 		RestoreLevelData(0);
@@ -215,32 +216,32 @@ void sgRestoreLevel()
 
 	if (savegame.Lara.vehicle != NO_ITEM)
 	{
-		for (int i = 0; i < level_items; i++)
+		item = items;
+
+		for (i = 0; i < level_items; i++)
 		{
-			item = &items[i];
-
 			if (item->object_number == MOTORBIKE || item->object_number == JEEP)
-			{
-				item->pos.x_pos = lara_item->pos.x_pos;
-				item->pos.y_pos = lara_item->pos.y_pos;
-				item->pos.z_pos = lara_item->pos.z_pos;
-				item->pos.y_rot = lara_item->pos.y_rot;
-
-				if (item->room_number != lara_item->room_number)
-					ItemNewRoom(i, lara_item->room_number);
-
-				floor = GetFloor(item->pos.x_pos, item->pos.y_pos, item->pos.z_pos, &item->room_number);
-				item->floor = GetHeight(floor, item->pos.x_pos, item->pos.y_pos, item->pos.z_pos);
-				lara.vehicle = i;
-
-				if (item->object_number == MOTORBIKE)
-					BikeStart(item, lara_item);
-				else
-					JeepStart(item, lara_item);
-
 				break;
-			}
+
+			item++;
 		}
+
+		item->pos.x_pos = lara_item->pos.x_pos;
+		item->pos.y_pos = lara_item->pos.y_pos;
+		item->pos.z_pos = lara_item->pos.z_pos;
+		item->pos.y_rot = lara_item->pos.y_rot;
+
+		if (item->room_number != lara_item->room_number)
+			ItemNewRoom(i, lara_item->room_number);
+
+		floor = GetFloor(item->pos.x_pos, item->pos.y_pos, item->pos.z_pos, &item->room_number);
+		item->floor = GetHeight(floor, item->pos.x_pos, item->pos.y_pos, item->pos.z_pos);
+		lara.vehicle = i;
+
+		if (item->object_number == MOTORBIKE)
+			BikeStart(item, lara_item);
+		else
+			JeepStart(item, lara_item);
 	}
 }
 
