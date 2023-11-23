@@ -123,19 +123,19 @@ void lara_col_climbstnc(ITEM_INFO* item, COLL_INFO* coll)
 
 		item->goal_anim_state = AS_CLIMBSTNC;
 		result_r = LaraTestClimbUpPos(item, coll->radius, coll->radius + 120, &shift_r, &ledge_r);
-		result_l = LaraTestClimbUpPos(item, coll->radius, coll->radius - 120, &shift_l, &ledge_l);
+		result_l = LaraTestClimbUpPos(item, coll->radius, -(coll->radius + 120), &shift_l, &ledge_l);
 
 		if (!result_r || !result_l)
 			return;
 
 		if (result_r < 0 || result_l < 0)
 		{
-			if (abs(ledge_l - ledge_r) <= 120)
-			{
-				item->goal_anim_state = AS_NULL;
-				item->pos.y_pos += (ledge_l + ledge_r) / 2 - 256;
+			if (abs(ledge_l - ledge_r) > 120)
 				return;
-			}
+
+			item->goal_anim_state = AS_NULL;
+			item->pos.y_pos += (ledge_l + ledge_r) / 2 - 256;
+			return;
 		}
 
 		if (shift_r)
