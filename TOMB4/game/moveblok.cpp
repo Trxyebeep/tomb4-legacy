@@ -717,10 +717,10 @@ void DrawPlanetEffect(ITEM_INFO* item)
 		poppush = bone[0];
 
 		if (poppush & 1)
-			phd_PushMatrix();
+			phd_PopMatrix();
 
 		if (poppush & 2)
-			phd_PopMatrix();
+			phd_PushMatrix();
 
 		phd_TranslateRel(bone[1], bone[2], bone[3]);
 		gar_RotYXZsuperpack(&rot, 0);
