@@ -115,7 +115,7 @@ long Key(long number)
 			return keymap[DIK_RMENU];
 		}
 	}
-	else if (joy_fire & (1 << key))
+	else if (joy_fire & (1 << (uchar)key))
 		return 1;
 
 	if (conflict[number])
