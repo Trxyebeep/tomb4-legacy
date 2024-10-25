@@ -624,7 +624,7 @@ bool LoadRooms()
 		return 0;
 	}
 
-	room = (ROOM_INFO*)game_malloc(number_rooms * sizeof(ROOM_INFO));
+	room = (ROOM_INFO*)game_malloc(number_rooms * sizeof(ROOM_INFO), 0);
 
 	if (!room)
 		return 0;
@@ -649,7 +649,7 @@ bool LoadRooms()
 
 		size = *(long*)FileData;
 		FileData += sizeof(long);
-		r->data = (short*)game_malloc(size * sizeof(short));
+		r->data = (short*)game_malloc(size * sizeof(short), 0);
 		memcpy(r->data, FileData, size * sizeof(short));
 		FileData += size * sizeof(short);
 
@@ -658,7 +658,7 @@ bool LoadRooms()
 
 		if (nDoors)
 		{
-			r->door = (short*)game_malloc((16 * nDoors + 1) * sizeof(short));
+			r->door = (short*)game_malloc((16 * nDoors + 1) * sizeof(short), 0);
 			r->door[0] = (short)nDoors;
 			memcpy(r->door + 1, FileData, 16 * nDoors * sizeof(short));
 			FileData += 16 * nDoors * sizeof(short);
@@ -673,7 +673,7 @@ bool LoadRooms()
 		FileData += sizeof(short);
 
 		size = r->x_size * r->y_size * sizeof(FLOOR_INFO);
-		r->floor = (FLOOR_INFO*)game_malloc(size);
+		r->floor = (FLOOR_INFO*)game_malloc(size, 0);
 		memcpy(r->floor, FileData, size);
 		FileData += size;
 
@@ -686,7 +686,7 @@ bool LoadRooms()
 		if (r->num_lights)
 		{
 			size = sizeof(LIGHTINFO) * r->num_lights;
-			r->light = (LIGHTINFO*)game_malloc(size);
+			r->light = (LIGHTINFO*)game_malloc(size, 0);
 			memcpy(r->light, FileData, size);
 			FileData += size;
 		}
@@ -699,7 +699,7 @@ bool LoadRooms()
 		if (r->num_meshes)
 		{
 			size = sizeof(MESH_INFO) * r->num_meshes;
-			r->mesh = (MESH_INFO*)game_malloc(size);
+			r->mesh = (MESH_INFO*)game_malloc(size, 0);
 			memcpy(r->mesh, FileData, size);
 			FileData += size;
 
@@ -737,7 +737,7 @@ bool LoadRooms()
 	BuildOutsideTable();
 	size = *(long*)FileData;
 	FileData += sizeof(long);
-	floor_data = (short*)game_malloc(2 * size);
+	floor_data = (short*)game_malloc(2 * size, 0);
 	memcpy(floor_data, FileData, 2 * size);
 	FileData += sizeof(short) * size;
 	Log(0, "Floor Data Size %d @ %x", size, floor_data);
@@ -759,13 +759,13 @@ bool LoadObjects()
 
 	size = *(long*)FileData;
 	FileData += sizeof(long);
-	mesh_base = (short*)game_malloc(size * sizeof(short));
+	mesh_base = (short*)game_malloc(size * sizeof(short), 0);
 	memcpy(mesh_base, FileData, size * sizeof(short));
 	FileData += size * sizeof(short);
 
 	size = *(long*)FileData;
 	FileData += sizeof(long);
-	meshes = (short**)game_malloc(2 * size * sizeof(short*));
+	meshes = (short**)game_malloc(2 * size * sizeof(short*), 0);
 	memcpy(meshes, FileData, size * sizeof(short*));
 	FileData += size * sizeof(short*);
 
@@ -776,37 +776,37 @@ bool LoadObjects()
 
 	num_anims = *(long*)FileData;
 	FileData += sizeof(long);
-	anims = (ANIM_STRUCT*)game_malloc(sizeof(ANIM_STRUCT) * num_anims);
+	anims = (ANIM_STRUCT*)game_malloc(sizeof(ANIM_STRUCT) * num_anims, 0);
 	memcpy(anims, FileData, sizeof(ANIM_STRUCT) * num_anims);
 	FileData += sizeof(ANIM_STRUCT) * num_anims;
 
 	size = *(long*)FileData;
 	FileData += sizeof(long);
-	changes = (CHANGE_STRUCT*)game_malloc(sizeof(CHANGE_STRUCT) * size);
+	changes = (CHANGE_STRUCT*)game_malloc(sizeof(CHANGE_STRUCT) * size, 0);
 	memcpy(changes, FileData, sizeof(CHANGE_STRUCT) * size);
 	FileData += sizeof(CHANGE_STRUCT) * size;
 
 	size = *(long*)FileData;
 	FileData += sizeof(long);
-	ranges = (RANGE_STRUCT*)game_malloc(sizeof(RANGE_STRUCT) * size);
+	ranges = (RANGE_STRUCT*)game_malloc(sizeof(RANGE_STRUCT) * size, 0);
 	memcpy(ranges, FileData, sizeof(RANGE_STRUCT) * size);
 	FileData += sizeof(RANGE_STRUCT) * size;
 
 	size = *(long*)FileData;
 	FileData += sizeof(long);
-	commands = (short*)game_malloc(sizeof(short) * size);
+	commands = (short*)game_malloc(sizeof(short) * size, 0);
 	memcpy(commands, FileData, sizeof(short) * size);
 	FileData += sizeof(short) * size;
 
 	size = *(long*)FileData;
 	FileData += sizeof(long);
-	bones = (long*)game_malloc(sizeof(long) * size);
+	bones = (long*)game_malloc(sizeof(long) * size, 0);
 	memcpy(bones, FileData, sizeof(long) * size);
 	FileData += sizeof(long) * size;
 
 	size = *(long*)FileData;
 	FileData += sizeof(long);
-	frames = (short*)game_malloc(sizeof(short) * size);
+	frames = (short*)game_malloc(sizeof(short) * size, 0);
 	memcpy(frames, FileData, sizeof(short) * size);
 	FileData += sizeof(short) * size;
 
@@ -905,7 +905,7 @@ bool LoadSprites()
 	FileData += 3;
 	num_sprites = *(long*)FileData;
 	FileData += sizeof(long);
-	spriteinfo = (SPRITESTRUCT*)game_malloc(sizeof(SPRITESTRUCT) * num_sprites);
+	spriteinfo = (SPRITESTRUCT*)game_malloc(sizeof(SPRITESTRUCT) * num_sprites, 0);
 
 	for (int i = 0; i < num_sprites; i++)
 	{
@@ -969,7 +969,7 @@ bool LoadCameras()
 
 	if (number_cameras)
 	{
-		camera.fixed = (OBJECT_VECTOR*)game_malloc(number_cameras * sizeof(OBJECT_VECTOR));
+		camera.fixed = (OBJECT_VECTOR*)game_malloc(number_cameras * sizeof(OBJECT_VECTOR), 0);
 		memcpy(camera.fixed, FileData, number_cameras * sizeof(OBJECT_VECTOR));
 		FileData += number_cameras * sizeof(OBJECT_VECTOR);
 	}
@@ -995,7 +995,7 @@ bool LoadSoundEffects()
 
 	if (number_sound_effects)
 	{
-		sound_effects = (OBJECT_VECTOR*)game_malloc(number_sound_effects * sizeof(OBJECT_VECTOR));
+		sound_effects = (OBJECT_VECTOR*)game_malloc(number_sound_effects * sizeof(OBJECT_VECTOR), 0);
 		memcpy(sound_effects, FileData, number_sound_effects * sizeof(OBJECT_VECTOR));
 		FileData += number_sound_effects * sizeof(OBJECT_VECTOR);
 	}
@@ -1012,13 +1012,13 @@ bool LoadBoxes()
 	num_boxes = *(long*)FileData;
 	FileData += sizeof(long);
 
-	boxes = (BOX_INFO*)game_malloc(sizeof(BOX_INFO) * num_boxes);
+	boxes = (BOX_INFO*)game_malloc(sizeof(BOX_INFO) * num_boxes, 0);
 	memcpy(boxes, FileData, sizeof(BOX_INFO) * num_boxes);
 	FileData += sizeof(BOX_INFO) * num_boxes;
 
 	size = *(long*)FileData;
 	FileData += sizeof(long);
-	overlap = (ushort*)game_malloc(sizeof(ushort) * size);
+	overlap = (ushort*)game_malloc(sizeof(ushort) * size, 0);
 	memcpy(overlap, FileData, sizeof(ushort) * size);
 	FileData += sizeof(ushort) * size;
 
@@ -1026,12 +1026,12 @@ bool LoadBoxes()
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			ground_zone[j][i] = (short*)game_malloc(sizeof(short) * num_boxes);
+			ground_zone[j][i] = (short*)game_malloc(sizeof(short) * num_boxes, 0);
 			memcpy(ground_zone[j][i], FileData, sizeof(short) * num_boxes);
 			FileData += sizeof(short) * num_boxes;
 		}
 
-		ground_zone[4][i] = (short*)game_malloc(sizeof(short) * num_boxes);
+		ground_zone[4][i] = (short*)game_malloc(sizeof(short) * num_boxes, 0);
 		memcpy(ground_zone[4][i], FileData, sizeof(short) * num_boxes);
 		FileData += sizeof(short) * num_boxes;
 	}
@@ -1055,7 +1055,7 @@ bool LoadAnimatedTextures()
 
 	num_anim_ranges = *(long*)FileData;
 	FileData += sizeof(long);
-	aranges = (short*)game_malloc(num_anim_ranges * 2);
+	aranges = (short*)game_malloc(num_anim_ranges * 2, 0);
 	memcpy(aranges, FileData, num_anim_ranges * 2);
 	FileData += num_anim_ranges * sizeof(short);
 	nAnimUVRanges = *(char*)FileData;
@@ -1075,7 +1075,7 @@ bool LoadTextureInfos()
 	val = *(long*)FileData;
 	FileData += sizeof(long);
 	Log(5, "Texture Infos : %d", val);
-	textinfo = (TEXTURESTRUCT*)game_malloc(val * sizeof(TEXTURESTRUCT));
+	textinfo = (TEXTURESTRUCT*)game_malloc(val * sizeof(TEXTURESTRUCT), 0);
 
 	for (int i = 0; i < val; i++)
 	{
@@ -1115,7 +1115,7 @@ bool LoadItems()
 	if (!num_items)
 		return 1;
 
-	items = (ITEM_INFO*)game_malloc(256 * sizeof(ITEM_INFO));
+	items = (ITEM_INFO*)game_malloc(256 * sizeof(ITEM_INFO), 0);
 	level_items = num_items;
 	InitialiseItemArray(256);
 
@@ -1203,7 +1203,7 @@ bool LoadAIInfo()
 	if (num_ai)
 	{
 		nAIObjects = (short)num_ai;
-		AIObjects = (AIOBJECT*)game_malloc(sizeof(AIOBJECT) * num_ai);
+		AIObjects = (AIOBJECT*)game_malloc(sizeof(AIOBJECT) * num_ai, 0);
 		memcpy(AIObjects, FileData, sizeof(AIOBJECT) * num_ai);
 		FileData += sizeof(AIOBJECT) * num_ai;
 	}
@@ -1217,7 +1217,7 @@ bool LoadSamples()
 	static long num_sample_infos;
 
 	Log(2, "LoadSamples");
-	sample_lut = (short*)game_malloc(MAX_SAMPLES * sizeof(short));
+	sample_lut = (short*)game_malloc(MAX_SAMPLES * sizeof(short), 0);
 	memcpy(sample_lut, FileData, MAX_SAMPLES * sizeof(short));
 	FileData += MAX_SAMPLES * sizeof(short);
 	num_sample_infos = *(long*)FileData;
@@ -1230,7 +1230,7 @@ bool LoadSamples()
 		return 0;
 	}
 
-	sample_infos = (SAMPLE_INFO*)game_malloc(sizeof(SAMPLE_INFO) * num_sample_infos);
+	sample_infos = (SAMPLE_INFO*)game_malloc(sizeof(SAMPLE_INFO) * num_sample_infos, 0);
 	memcpy(sample_infos, FileData, sizeof(SAMPLE_INFO) * num_sample_infos);
 	FileData += sizeof(SAMPLE_INFO) * num_sample_infos;
 	num_samples = *(long*)FileData;

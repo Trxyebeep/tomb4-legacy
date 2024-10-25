@@ -276,7 +276,7 @@ void ProcessRoomData(ROOM_INFO* r)
 	r->gt4cnt = *data_ptr++;
 	data_ptr += r->gt4cnt * 5;
 	r->gt3cnt = *data_ptr;
-	r->verts = (D3DVECTOR*)game_malloc(sizeof(D3DVECTOR) * r->nVerts);
+	r->verts = (D3DVECTOR*)game_malloc(sizeof(D3DVECTOR) * r->nVerts, 0);
 	faces = (short*)malloc(2 * r->nVerts);
 	prelight = (short*)malloc(2 * r->nVerts);
 	data_ptr = r->data + 1;	//go to vert data
@@ -361,8 +361,8 @@ void ProcessRoomData(ROOM_INFO* r)
 
 	free(faces);
 	CreateVertexNormals(r);
-	r->prelight = (long*)game_malloc(4 * r->nVerts);
-	r->prelightwater = (long*)game_malloc(4 * r->nVerts);
+	r->prelight = (long*)game_malloc(4 * r->nVerts, 0);
+	r->prelightwater = (long*)game_malloc(4 * r->nVerts, 0);
 	r->watercalc = 0;
 	vb.dwNumVertices = r->nVerts;
 	vb.dwSize = sizeof(D3DVERTEXBUFFERDESC);
@@ -401,7 +401,7 @@ void ProcessRoomData(ROOM_INFO* r)
 
 	if (r->num_lights)
 	{
-		r->pclight = (PCLIGHT_INFO*)game_malloc(sizeof(PCLIGHT_INFO) * r->num_lights);
+		r->pclight = (PCLIGHT_INFO*)game_malloc(sizeof(PCLIGHT_INFO) * r->num_lights, 0);
 		nLights = 0;
 		nBulbs = NumLevelFogBulbs;
 
@@ -676,7 +676,7 @@ void ProcessMeshData(long num_meshes)
 
 	Log(2, "ProcessMeshData %d", num_meshes);
 	num_level_meshes = num_meshes;
-	mesh_vtxbuf = (MESH_DATA**)game_malloc(4 * num_meshes);
+	mesh_vtxbuf = (MESH_DATA**)game_malloc(4 * num_meshes, 0);
 	mesh_base = (short*)malloc_ptr;
 	last_mesh_ptr = NULL;
 	mesh = (MESH_DATA*)num_meshes;
@@ -693,7 +693,7 @@ void ProcessMeshData(long num_meshes)
 		else
 		{
 			last_mesh_ptr = mesh_ptr;
-			mesh = (MESH_DATA*)game_malloc(sizeof(MESH_DATA));
+			mesh = (MESH_DATA*)game_malloc(sizeof(MESH_DATA), 0);
 			memset(mesh, 0, sizeof(MESH_DATA));
 			meshes[i] = (short*)mesh;
 			mesh_vtxbuf[i] = mesh;
@@ -735,7 +735,7 @@ void ProcessMeshData(long num_meshes)
 
 				if (mesh->nNorms > 0)
 				{
-					mesh->Normals = (D3DVECTOR*)game_malloc(mesh->nNorms * sizeof(D3DVECTOR));
+					mesh->Normals = (D3DVECTOR*)game_malloc(mesh->nNorms * sizeof(D3DVECTOR), 0);
 
 					for (int j = 0; j < mesh->nVerts; j++)
 					{
@@ -754,7 +754,7 @@ void ProcessMeshData(long num_meshes)
 				else
 				{
 					mesh->Normals = NULL;
-					mesh->prelight = (long*)game_malloc(4 * mesh->nVerts);
+					mesh->prelight = (long*)game_malloc(4 * mesh->nVerts, 0);
 
 					for (int j = 0; j < mesh->nVerts; j++)
 					{
@@ -774,7 +774,7 @@ void ProcessMeshData(long num_meshes)
 
 			if (mesh->ngt4)
 			{
-				mesh->gt4 = (short*)game_malloc(12 * mesh->ngt4);
+				mesh->gt4 = (short*)game_malloc(12 * mesh->ngt4, 0);
 				lp = 6 * mesh->ngt4;
 
 				for (int j = 0; j < lp; j++)
@@ -788,7 +788,7 @@ void ProcessMeshData(long num_meshes)
 
 			if (mesh->ngt3)
 			{
-				mesh->gt3 = (short*)game_malloc(10 * mesh->ngt3);
+				mesh->gt3 = (short*)game_malloc(10 * mesh->ngt3, 0);
 				lp = 5 * mesh->ngt3;
 
 				for (int j = 0; j < lp; j++)
@@ -997,7 +997,7 @@ void CreateVertexNormals(ROOM_INFO* r)
 	short nTris;
 
 	data = r->FaceData;
-	r->fnormals = (D3DVECTOR*)game_malloc(sizeof(D3DVECTOR) * (r->gt3cnt + r->gt4cnt));
+	r->fnormals = (D3DVECTOR*)game_malloc(sizeof(D3DVECTOR) * (r->gt3cnt + r->gt4cnt), 0);
 	nQuads = *data++;
 
 	for (int i = 0; i < nQuads; i++)
@@ -1033,7 +1033,7 @@ void CreateVertexNormals(ROOM_INFO* r)
 		data += 4;
 	}
 
-	r->vnormals = (D3DVECTOR*)game_malloc(sizeof(D3DVECTOR) * r->nVerts);
+	r->vnormals = (D3DVECTOR*)game_malloc(sizeof(D3DVECTOR) * r->nVerts, 0);
 
 	data = r->FaceData;
 	nQuads = *data++;

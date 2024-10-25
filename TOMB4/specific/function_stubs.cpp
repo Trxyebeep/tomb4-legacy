@@ -62,7 +62,7 @@ void init_game_malloc()
 	malloc_used = 0;
 }
 
-void* game_malloc(long size)
+void* game_malloc(long size, long type)
 {
 	char* ptr;
 

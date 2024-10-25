@@ -334,8 +334,8 @@ void MallocD3DLights()
 		Log(1, "MAX Room Lights of %d Exceeded - %d", 21, MaxRoomLights);
 
 	MaxRoomLights *= 2;
-	D3DLights = (D3DLIGHT_STRUCT*)game_malloc(sizeof(D3DLIGHT_STRUCT) * MaxRoomLights);
-	D3DDynamics = (D3DLIGHT_STRUCT*)game_malloc(sizeof(D3DLIGHT_STRUCT) * MAX_DYNAMICS);
+	D3DLights = (D3DLIGHT_STRUCT*)game_malloc(sizeof(D3DLIGHT_STRUCT) * MaxRoomLights, 0);
+	D3DDynamics = (D3DLIGHT_STRUCT*)game_malloc(sizeof(D3DLIGHT_STRUCT) * MAX_DYNAMICS, 0);
 }
 
 void CreateD3DLights()
