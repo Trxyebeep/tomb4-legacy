@@ -400,7 +400,7 @@ void FindCrowbarSwitch(ITEM_INFO* item, short switch_index)
 	{
 		item2 = &items[item_num];
 
-		if (item2->object_number == COG)
+		if (item2->object_number == CROWBAR_SWITCH)
 			item2->item_flags[0] = switch_index;
 	}
 

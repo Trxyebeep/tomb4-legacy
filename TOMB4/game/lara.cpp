@@ -574,17 +574,14 @@ void lara_col_hang(ITEM_INFO* item, COLL_INFO* coll)
 			{
 				if (input & IN_BACK && lara.climb_status && coll->mid_floor > 344)
 				{
-					if (input & IN_BACK && lara.climb_status && coll->mid_floor > 344)
+					if (LaraTestClimbStance(item, coll))
+						item->goal_anim_state = AS_CLIMBSTNC;
+					else
 					{
-						if (LaraTestClimbStance(item, coll))
-							item->goal_anim_state = AS_CLIMBSTNC;
-						else
-						{
-							item->anim_number = ANIM_HANGDOWN;
-							item->frame_number = anims[ANIM_HANGDOWN].frame_base;
-							item->goal_anim_state = AS_HANG;
-							item->current_anim_state = AS_HANG;
-						}
+						item->anim_number = ANIM_HANGDOWN;
+						item->frame_number = anims[ANIM_HANGDOWN].frame_base;
+						item->goal_anim_state = AS_HANG;
+						item->current_anim_state = AS_HANG;
 					}
 				}
 			}

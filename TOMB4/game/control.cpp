@@ -2627,7 +2627,7 @@ void AnimateItem(ITEM_INFO* item)
 
 				case ACMD_KILL:
 
-					if (objects[item->object_number].intelligent)
+					if (objects[item->object_number].intelligent && !item->after_death)
 						item->after_death = 1;
 
 					item->status = ITEM_DEACTIVATED;
