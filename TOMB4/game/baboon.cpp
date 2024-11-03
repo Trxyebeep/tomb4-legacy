@@ -361,7 +361,7 @@ void BaboonControl(short item_number)
 				else
 					item->pos.y_rot += 1274;
 
-				if (!baboon->flags && item->touch_bits & 0x90)
+				if (!baboon->flags && item->touch_bits & 0x1800)
 				{
 					lara_item->hit_points -= 70;
 					lara_item->hit_status = 1;
