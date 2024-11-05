@@ -1828,9 +1828,9 @@ void RefreshCamera(short type, short* data)
 
 			if (value == camera.last)
 			{
-				camera.number = trigger & 0x3FF;
+				camera.number = value;
 
-				if (camera.timer >= 0 && (camera.type != LOOK_CAMERA && camera.type != COMBAT_CAMERA || camera.fixed[camera.number].flags & 3))
+				if (camera.timer >= 0 && (camera.type != LOOK_CAMERA && camera.type != COMBAT_CAMERA || camera.fixed[camera.number].flags & 1))
 				{
 					camera.type = FIXED_CAMERA;
 					target_ok = 1;
