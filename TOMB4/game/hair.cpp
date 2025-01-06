@@ -36,9 +36,9 @@ void InitialiseHair()
 
 		for (int j = 1; j < 7; j++, bone += 4)
 		{
-			hptr->pos.x_pos = bone[3];
+			hptr->pos.x_pos = bone[1];
 			hptr->pos.y_pos = bone[2];
-			hptr->pos.z_pos = bone[1];
+			hptr->pos.z_pos = bone[3];
 			hptr->pos.x_rot = -16384;
 			hptr->pos.y_rot = 0;
 			hptr->pos.z_rot = 0;
