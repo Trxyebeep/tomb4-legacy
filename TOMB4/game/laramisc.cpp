@@ -137,11 +137,11 @@ void LaraInitialiseMeshes()
 	}
 
 	if (lara.gun_type == WEAPON_GRENADE)
-		lara.back_gun = WEAPON_GRENADE;
+		lara.back_gun = GRENADE_GUN_ANIM;
 	else if (lara.shotgun_type_carried)
-		lara.back_gun = WEAPON_UZI;
+		lara.back_gun = SHOTGUN_ANIM;
 	else if (lara.grenade_type_carried)
-		lara.back_gun = WEAPON_GRENADE;
+		lara.back_gun = GRENADE_GUN_ANIM;
 
 	lara.gun_status = LG_NO_ARMS;
 	lara.left_arm.frame_number = 0;
