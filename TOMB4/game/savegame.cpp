@@ -555,7 +555,7 @@ void SaveLevelData(long FullSave)
 
 				if (obj->save_flags)
 				{
-					flags = item->flags;
+					flags = (ushort)item->flags;
 					flags |= item->active << 16;
 					flags |= item->status << 17;
 					flags |= item->gravity_status << 19;
